@@ -43,19 +43,23 @@ $inventoryAlerts = [
     </div>
 
     <ul class="menu">
-        <li><a href="#" class="active">
+        <li>
+            <a href="#" class="active">
             <i class="fa-solid fa-chart-line"></i>
             Dashboard</a>
         </li>
-        <li><a href="#">
+        <li>
+            <a href="livequeue.php">
             <i class="fa-solid fa-utensils"></i>
             Live Queue</a>
         </li>
-        <li><a href="#">
+        <li>
+            <a href="#">
             <i class="fa-solid fa-box"></i>
             Inventory</a>
         </li>
-        <li><a href="#">
+        <li>
+            <a href="#">
             <i class="fa-solid fa-clipboard-list"> </i>
             Menu Management</a>
         </li>
@@ -203,7 +207,9 @@ $inventoryAlerts = [
                     <h3>Quick Actions</h3>
                 </div>
 
-                <button class="action-btn">
+                <button 
+                    class="action-btn"
+                    onclick="window.location='livequeue.php'">
                     View Live Queue
                 </button>
 
