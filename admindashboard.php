@@ -44,7 +44,7 @@ $inventoryAlerts = [
 
     <ul class="menu">
         <li>
-            <a href="#" class="active">
+           <a href="admindashboard.php" class="active">
             <i class="fa-solid fa-chart-line"></i>
             Dashboard</a>
         </li>
@@ -82,7 +82,7 @@ $inventoryAlerts = [
 
         <div class="search-container">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" placeholder="Search orders...">
+            <input type="text" id="searchInput" placeholder="Search orders...">
         </div>
 
         <div class="top-actions">
@@ -228,6 +228,7 @@ $inventoryAlerts = [
     </div>
 
 </div>
+<script src="js/script.js"></script>
 
 </body>
 </html>

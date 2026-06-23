@@ -485,6 +485,7 @@ tbody tr:hover{
 .customer-name{
     font-weight:600;
     margin-bottom:4px;
+    color:var(--neutral);
 }
 
 .order-time{

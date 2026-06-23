@@ -62,8 +62,6 @@ $liveOrders = [
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
-<body>
-</head>
 
 <body>
 
@@ -128,7 +126,7 @@ $liveOrders = [
 
         <div class="search-container">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" placeholder="Search orders...">
+            <input type="text" id="searchInput" placeholder="Search orders...">
         </div>
 
         <div class="top-actions">
@@ -266,5 +264,6 @@ $liveOrders = [
 
 </div>
 
+<script src="js/script.js"></script>
 </body>
 </html>
