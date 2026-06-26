@@ -27,7 +27,7 @@ $inventoryAlerts = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pabili Admin Dashboard</title>
 
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admindashboard.css">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -54,7 +54,7 @@ $inventoryAlerts = [
             Live Queue</a>
         </li>
         <li>
-            <a href="#">
+            <a href="inventory.php">
             <i class="fa-solid fa-box"></i>
             Inventory</a>
         </li>
@@ -140,7 +140,7 @@ $inventoryAlerts = [
                     <h3>Recent Orders</h3>
                 </div>
 
-                <table>
+                <table id="ordersTable">
 
                     <thead>
                         <tr>
@@ -150,7 +150,7 @@ $inventoryAlerts = [
                         </tr>
                     </thead>
 
-                    <tbody>
+                    <tbody id="ordersTable">
 
                     <?php foreach($recentOrders as $order): ?>
 
@@ -167,7 +167,7 @@ $inventoryAlerts = [
 
                     <?php endforeach; ?>
 
-                    </tbody>
+                    <tbody id="ordersTable">
 
                 </table>
 
@@ -228,7 +228,7 @@ $inventoryAlerts = [
     </div>
 
 </div>
-<script src="js/script.js"></script>
+<script src="js/admindashboard.js"></script>
 
 </body>
 </html>
