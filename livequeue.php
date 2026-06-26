@@ -276,17 +276,12 @@ $liveOrders = [
     <div class="queue-toolbar">
 
     <button class="filter-btn">
-
         <i class="fa-solid fa-filter"></i>
-
         All Stations
-
     </button>
 
-    <button class="filter-btn">
-
+    <button class="filter-btn" id="sortNewest">
         Newest First
-
     </button>
 
     </div>
