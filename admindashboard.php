@@ -140,7 +140,7 @@ $inventoryAlerts = [
                     <h3>Recent Orders</h3>
                 </div>
 
-                <table id="ordersTable">
+                <table>
 
                     <thead>
                         <tr>
