@@ -167,7 +167,7 @@ $inventoryAlerts = [
 
                     <?php endforeach; ?>
 
-                    <tbody id="ordersTable">
+                    </tbody>
 
                 </table>
 
