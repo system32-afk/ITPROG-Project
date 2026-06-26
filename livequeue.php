@@ -255,7 +255,7 @@ $liveOrders = [
             <span class="card-label">
                 Active Orders
             </span>
-            <h2>24</h2>
+            <h2 class="active-orders-number">24</h2>
         </div>
 
         <div class="card">

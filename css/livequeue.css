@@ -252,6 +252,9 @@ th{
     color:var(--neutral);
 }
 
+.active-orders-number{
+    color:#4338CA !important;
+}
 
 @media(max-width:1200px){
 
