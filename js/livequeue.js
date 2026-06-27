@@ -94,14 +94,50 @@ document.querySelectorAll(".priority-btn").forEach(button=>{
 
 });
 
-const sortBtn = document.getElementById("sortNewest");
+const sortSelect = document.getElementById("sortOrders");
 
-sortBtn.addEventListener("click",()=>{
+sortSelect.addEventListener("change", function(){
 
-    const container=document.querySelector(".live-queue-container");
+    const container = document.querySelector(".live-queue-container");
 
-    const cards=[...container.querySelectorAll(".order-card:not(.empty-order-card)")];
+    const cards = [...container.querySelectorAll(".order-card:not(.empty-order-card)")];
 
-    cards.reverse().forEach(card=>container.prepend(card));
+    if(this.value === "newest"){
+
+        cards.sort((a,b)=>
+            b.dataset.id - a.dataset.id
+        );
+
+    }
+
+    if(this.value === "quantity"){
+
+        cards.sort((a,b)=>
+            b.dataset.quantity - a.dataset.quantity
+        );
+
+    }
+
+    if(this.value === "delayed"){
+
+        cards.sort((a,b)=>{
+
+            const aDelayed = a.dataset.status==="delayed";
+            const bDelayed = b.dataset.status==="delayed";
+
+            return bDelayed - aDelayed;
+
+        });
+
+    }
+
+    cards.forEach(card=>{
+
+        container.insertBefore(
+            card,
+            document.querySelector(".empty-order-card")
+        );
+
+    });
 
 });

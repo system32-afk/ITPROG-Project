@@ -280,9 +280,14 @@ $liveOrders = [
         All Stations
     </button>
 
-    <button class="filter-btn" id="sortNewest">
-        Newest First
-    </button>
+    <select id="sortOrders" class="filter-btn">
+
+        <option value="">Sort By</option>
+        <option value="delayed">Delayed First</option>
+        <option value="quantity">Quantity Highest First</option>
+        <option value="newest">Newest First</option>
+
+    </select>
 
     </div>
 
@@ -290,7 +295,17 @@ $liveOrders = [
 
         <?php foreach($liveOrders as $order): ?>
 
-        <div class="order-card <?php echo strtolower($order['status']); ?>">
+        <div
+            class="order-card <?php echo strtolower($order['status']); ?>"
+
+            data-id="<?php echo $order['order_id']; ?>"
+
+            data-status="<?php echo strtolower($order['status']); ?>"
+
+            data-quantity="<?php
+                echo array_sum(array_column($order['items'],'quantity'));
+            ?>"
+        >
 
             <div class="order-header">
 
