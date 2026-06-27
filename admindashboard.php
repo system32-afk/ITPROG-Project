@@ -8,9 +8,13 @@ $dashboardStats = [
 ];
 
 $recentOrders = [
-    ["id" => "001", "customer" => "Customer A", "status" => "Pending"],
-    ["id" => "002", "customer" => "Customer B", "status" => "Preparing"],
-    ["id" => "003", "customer" => "Customer C", "status" => "Ready"]
+    ["id" => "007", "customer" => "Customer G", "status" => "Pending"],
+    ["id" => "006", "customer" => "Customer F", "status" => "Preparing"],
+    ["id" => "005", "customer" => "Customer E", "status" => "Ready"],
+    ["id" => "004", "customer" => "Customer D", "status" => "Preparing"],
+    ["id" => "003", "customer" => "Customer C", "status" => "Pending"],
+    ["id" => "002", "customer" => "Customer B", "status" => "Ready"],
+    ["id" => "001", "customer" => "Customer A", "status" => "Preparing"]
 ];
 
 $inventoryAlerts = [
@@ -152,7 +156,7 @@ $inventoryAlerts = [
 
                     <tbody id="ordersTable">
 
-                    <?php foreach($recentOrders as $order): ?>
+                    <?php foreach(array_slice($recentOrders, 0, 5) as $order): ?>
 
                         <tr onclick="window.location='vieworder.php?id=<?php echo $order['id']; ?>'">
                             <td><?php echo $order['id']; ?></td>
