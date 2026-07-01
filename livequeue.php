@@ -194,7 +194,7 @@ $liveOrders = [
         </li>
 
         <li>
-            <a href="#">
+            <a href="menumanagement.php">
                 <i class="fa-solid fa-clipboard-list"></i>
                 Menu Management
             </a>

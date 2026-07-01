@@ -79,7 +79,7 @@ foreach($inventoryItems as $item){
 <ul class="menu">
 <li><a href="livequeue.php"><i class="fa-solid fa-utensils"></i> Live Queue</a></li>
 <li><a href="inventory.php" class="active"><i class="fa-solid fa-box"></i> Inventory</a></li>
-<li><a href="#"><i class="fa-solid fa-clipboard-list"></i> Menu Management</a></li>
+<li><a href="menumanagement.php"><i class="fa-solid fa-clipboard-list"></i> Menu Management</a></li>
 </ul>
 
 <div class="sidebar-footer">
