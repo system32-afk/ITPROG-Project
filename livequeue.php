@@ -7,6 +7,7 @@ $liveOrders = [
         "vendor_id" => 1,
         "customer_name" => "Customer A",
         "customer_contact" => "09171234567",
+        "payment_method" => "Cash",
         "status" => "Priority",
         "target" => "15m",
         "created_at" => "12m Ago",
@@ -49,6 +50,7 @@ $liveOrders = [
         "vendor_id" => 1,
         "customer_name" => "Customer B",
         "customer_contact" => "09171234568",
+        "payment_method" => "GCash",
         "status" => "Preparing",
         "target" => "10m",
         "created_at" => "5m Ago",
@@ -82,6 +84,7 @@ $liveOrders = [
         "vendor_id" => 1,
         "customer_name" => "Customer C",
         "customer_contact" => "09171234569",
+        "payment_method" => "Cash",
         "status" => "Pending",
         "target" => "15m",
         "created_at" => "2m Ago",
@@ -115,6 +118,7 @@ $liveOrders = [
         "vendor_id" => 1,
         "customer_name" => "Customer D",
         "customer_contact" => "09171234570",
+        "payment_method" => "GCash",
         "status" => "Delayed",
         "target" => "15m",
         "created_at" => "22m Ago",
@@ -389,6 +393,19 @@ $liveOrders = [
                 </button>
 
             </div>
+
+            <?php if($order["payment_method"]=="Cash"): ?>
+
+            <div class="order-actions">
+
+                <button class="verify-btn">
+                Generate Verification Code
+                </button>
+
+            </div>
+
+        <?php endif; ?>
+
     </div>
         <?php endforeach; ?>
 
@@ -401,6 +418,31 @@ $liveOrders = [
             </p>
 
         </div>
+
+    </div>
+
+</div>
+<div id="verificationModal" class="modal">
+
+    <div class="modal-content">
+
+        <h2>Verification Code</h2>
+
+        <h1 id="verificationCode">
+            000000
+        </h1>
+
+        <button id="copyCodeBtn" class="process-btn">
+
+            Copy Code
+
+        </button>
+
+        <button id="closeModalBtn" class="cancel-btn">
+
+            Close
+
+        </button>
 
     </div>
 

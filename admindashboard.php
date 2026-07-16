@@ -225,6 +225,10 @@ $inventoryAlerts = [
                     Manage Menu
                 </button>
 
+                <button class="action-btn" id="generateQRBtn">
+                    Generate QR
+                </button>
+
             </div>
 
         </div>
@@ -232,6 +236,31 @@ $inventoryAlerts = [
     </div>
 
 </div>
+
+<div id="qrModal" class="modal">
+
+    <div class="modal-box">
+
+        <span id="closeQRBtn" class="close-modal">
+            &times;
+        </span>
+
+        <h2>Restaurant QR Code</h2>
+
+        <div class="qr-placeholder">
+
+            <i class="fa-solid fa-qrcode"></i>
+
+        </div>
+
+        <p>
+            Scan this QR code to order.
+        </p>
+
+    </div>
+
+</div>
+
 <script src="js/admindashboard.js"></script>
 
 </body>

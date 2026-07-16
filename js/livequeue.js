@@ -20,7 +20,7 @@ if (searchInput) {
 
 }
 
-document.querySelectorAll(".cancel-btn").forEach(button => {
+document.querySelectorAll(".order-card .cancel-btn").forEach(button => {
 
     button.addEventListener("click", function(e){
 
@@ -139,5 +139,52 @@ sortSelect.addEventListener("change", function(){
         );
 
     });
+});
+
+const modal = document.getElementById("verificationModal");
+
+const codeText = document.getElementById("verificationCode");
+
+const closeBtn = document.getElementById("closeModalBtn");
+
+const copyBtn = document.getElementById("copyCodeBtn");
+
+document.querySelectorAll(".verify-btn").forEach(button=>{
+
+    button.addEventListener("click",function(e){
+
+        e.stopPropagation();
+
+        const code=Math.floor(100000+Math.random()*900000);
+
+        codeText.textContent=code;
+
+        modal.style.display="flex";
+
+    });
+
+});
+
+closeBtn.addEventListener("click",()=>{
+
+    modal.style.display="none";
+
+});
+
+copyBtn.addEventListener("click",()=>{
+
+    navigator.clipboard.writeText(codeText.textContent);
+
+    alert("Verification code copied!");
+
+});
+
+window.addEventListener("click",function(e){
+
+    if(e.target===modal){
+
+        modal.style.display="none";
+
+    }
 
 });

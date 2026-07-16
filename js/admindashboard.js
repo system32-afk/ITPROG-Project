@@ -17,3 +17,28 @@ if (searchInput) {
     });
 
 }
+const generateQRBtn = document.getElementById("generateQRBtn");
+const qrModal = document.getElementById("qrModal");
+const closeQRBtn = document.getElementById("closeQRBtn");
+
+generateQRBtn.addEventListener("click", function(){
+
+    qrModal.style.display = "flex";
+
+});
+
+closeQRBtn.addEventListener("click", function(){
+
+    qrModal.style.display = "none";
+
+});
+
+window.addEventListener("click", function(e){
+
+    if(e.target === qrModal){
+
+        qrModal.style.display = "none";
+
+    }
+
+});

@@ -432,4 +432,92 @@ tbody tr:hover{
     transform:scale(1.05);
 }
 
+/* QR Popup */
+
+.modal{
+
+    display:none;
+
+    position:fixed;
+
+    inset:0;
+
+    background:rgba(0,0,0,.45);
+
+    justify-content:center;
+
+    align-items:center;
+
+    z-index:1000;
+
+}
+
+.modal-box{
+
+    position:relative;
+
+    background:white;
+
+    width:360px;
+
+    padding:30px;
+
+    border-radius:12px;
+
+    text-align:center;
+
+    box-shadow:0 20px 40px rgba(0,0,0,.15);
+
+}
+
+.close-modal{
+
+    position:absolute;
+
+    top:15px;
+
+    right:18px;
+
+    font-size:24px;
+
+    cursor:pointer;
+
+    color:#64748B;
+
+}
+
+.close-modal:hover{
+
+    color:#DC2626;
+
+}
+
+.qr-placeholder{
+
+    width:220px;
+
+    height:220px;
+
+    margin:20px auto;
+
+    border:2px dashed var(--border);
+
+    border-radius:10px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+}
+
+.qr-placeholder i{
+
+    font-size:120px;
+
+    color:var(--primary);
+
+}
+
 /* admin dashboard css end */
