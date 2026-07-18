@@ -53,7 +53,6 @@ foreach($inventoryItems as $item){
         $expiringSoon++;
     }
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -70,7 +69,6 @@ foreach($inventoryItems as $item){
 <body>
 
 <div class="sidebar">
-
 <div class="logo">
 <h2>Kitchen Admin</h2>
 <p>Station #04</p>
@@ -86,7 +84,6 @@ foreach($inventoryItems as $item){
 <a href="#"><i class="fa-solid fa-chart-pie"></i> Reports</a>
 <a href="#"><i class="fa-solid fa-circle-question"></i> Help</a>
 </div>
-
 </div>
 
 <div class="main">
@@ -99,7 +96,7 @@ foreach($inventoryItems as $item){
 </div>
 
 <div class="top-actions">
-<button class="new-order-btn">
+<button class="new-order-btn" id="openAddModal">
 <i class="fa-solid fa-circle-plus"></i>
 Add New Stock
 </button>
@@ -172,13 +169,8 @@ if($item["stock"]<=0){
 
 <td>
 
-<button class="table-btn edit">
-Edit
-</button>
-
-<button class="table-btn delete">
-Delete
-</button>
+<button class="table-btn edit">Edit</button>
+<button class="table-btn history">History</button>
 
 </td>
 
@@ -192,6 +184,180 @@ Delete
 
 </div>
 
+</div>
+
+<!-- ADD MODAL -->
+<div class="modal" id="addInventoryModal">
+<div class="modal-content">
+<div class="modal-header">
+<h2>Add New Inventory Item</h2>
+<span class="close">&times;</span>
+</div>
+
+<div class="modal-body">
+
+<h3>Ingredient Information</h3>
+
+<div class="form-group">
+<label>Ingredient Name *</label>
+<input type="text" id="addName">
+</div>
+
+<div class="form-row">
+<div class="form-group">
+<label>Unit</label>
+<input type="text" id="addUnit" placeholder="kg, g, pcs, L">
+</div>
+
+<div class="form-group">
+<label>Quantity *</label>
+<input type="number" id="addQuantity">
+</div>
+</div>
+
+<div class="form-row">
+
+<div class="form-group">
+<label>Minimum Threshold</label>
+<input type="number" id="addThreshold">
+</div>
+
+<div class="form-group">
+<label>Expiry Date</label>
+<input type="date" id="addExpiry">
+</div>
+
+</div>
+
+<div class="checkbox-group">
+<input type="checkbox" id="nonPerishable">
+<label for="nonPerishable">Non-perishable Food</label>
+</div>
+
+</div>
+
+<div class="modal-footer">
+<button class="table-btn">Cancel</button>
+<button class="table-btn edit" id="saveItemBtn">
+    Save Item
+</button>
+</div>
+
+</div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal" id="editInventoryModal">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+            <h2>Edit Ingredient</h2>
+            <span class="close">&times;</span>
+        </div>
+
+        <div class="modal-body">
+
+            <div class="form-group">
+                <label>Ingredient Name</label>
+                <input type="text" id="editName">
+            </div>
+
+            <div class="form-row">
+
+                <div class="form-group">
+                    <label>Current Stock</label>
+                    <input type="number" id="editStock">
+                </div>
+
+                <div class="form-group">
+                    <label>Unit</label>
+                    <input type="text" id="editUnit">
+                </div>
+
+            </div>
+
+            <div class="form-row">
+
+                <div class="form-group">
+                    <label>Minimum Threshold</label>
+                    <input type="number" id="editThreshold">
+                </div>
+
+                <div class="form-group">
+                    <label>Expiry Date</label>
+                    <input type="date" id="editExpiry">
+                </div>
+
+            </div>
+
+            <div class="form-group">
+                <label>Reason for Change *</label>
+                <textarea id="changeReason" rows="3"></textarea>
+            </div>
+
+        </div>
+
+        <div class="modal-footer">
+            <button class="table-btn">Cancel</button>
+            <button class="table-btn edit" id="updateItemBtn">
+                Update Item
+            </button>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- HISTORY MODAL -->
+<div class="modal" id="historyModal">
+<div class="modal-content">
+
+<div class="modal-header">
+<h2>Inventory Edit History</h2>
+<span class="close">&times;</span>
+</div>
+
+<div class="modal-body">
+
+<table>
+
+<thead>
+<tr>
+<th>Date & Time</th>
+<th>Action</th>
+<th>User</th>
+<th>Change</th>
+</tr>
+</thead>
+
+<tbody>
+
+<tr>
+<td>Jul 18, 2026 9:45 AM</td>
+<td>Updated</td>
+<td>Einzenn Ham</td>
+<td>Stock changed from 20 kg → 35 kg</td>
+</tr>
+
+<tr>
+<td>Jul 17, 2026 3:10 PM</td>
+<td>Added</td>
+<td>Einzenn Ham</td>
+<td>Ingredient created</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+<div class="modal-footer">
+<button class="table-btn">Close</button>
+</div>
+
+</div>
 </div>
 
 <script src="js/inventory.js"></script>
