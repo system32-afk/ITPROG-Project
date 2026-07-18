@@ -138,7 +138,7 @@ $totalPages   = 11;
                 <i class="fa-solid fa-gear"></i>
             </button>
 
-            <button class="new-order-btn">
+            <button class="new-order-btn" id="openAddModal">
                 + New Order
             </button>
 
