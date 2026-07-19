@@ -433,15 +433,11 @@ $liveOrders = [
         </h1>
 
         <button id="copyCodeBtn" class="process-btn">
-
             Copy Code
-
         </button>
 
         <button id="closeModalBtn" class="cancel-btn">
-
             Close
-
         </button>
 
     </div>
