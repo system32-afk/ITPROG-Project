@@ -138,7 +138,7 @@ $totalPages   = 11;
                 <i class="fa-solid fa-gear"></i>
             </button>
 
-            <button class="new-order-btn">
+            <button class="new-order-btn" id="openAddModal">
                 + New Order
             </button>
 
@@ -160,10 +160,54 @@ $totalPages   = 11;
         <p class="page-description">Manage your digital menu items, pricing, and availability.</p>
     </div>
 
-        <button class="add-item-btn" onclick="window.location='addmenuitem.php'">
+        <button class="add-item-btn">
             <i class="fa-solid fa-circle-plus"></i>
             Add New Item
         </button>
+    </div>
+
+    <div id="addMenuModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h3>Add New Food Item</h3>
+            <button class="close-btn">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="addMenuForm">
+                <div class="form-group">
+                    <label>Item Name</label>
+                    <input type="text" placeholder="e.g. Truffle Lava Cake" required>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select required>
+                        <option value="">Select category...</option>
+                        <option value="Main Course">Main Course</option>
+                        <option value="Appetizers">Appetizers</option>
+                        <option value="Salads">Salads</option>
+                        <option value="Desserts">Desserts</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Price ($)</label>
+                    <input type="number" step="0.01" placeholder="0.00" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea rows="3" placeholder="Enter item description..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Image URL</label>
+                    <input type="text" placeholder="e.g. img/new-item.jpg">
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="submit" form="addMenuForm" class="save-btn">Save Item</button>
+        </div>
+        </div>
     </div>
 
     <!-- Menu table -->
@@ -228,7 +272,7 @@ $totalPages   = 11;
                     <!-- Actions -->
                     <td>
                         <div class="action-cell">
-                            <button class="action-btn" title="Edit item" onclick="window.location='editmenuitem.php?id=<?= $index ?>'">
+                            <button class="action-btn" title="Edit item">
                                 <i class="fa-solid fa-pen"></i>
                             </button>
                             <button class="action-btn delete" title="Delete item" onclick="confirmDelete(<?= $index ?>)">
@@ -263,9 +307,10 @@ $totalPages   = 11;
     <!-- end menu table -->
  
 </div>
+
 <!-- end main -->
  
-<script src="js/menumanamgement.js"></script>
+<script src="js/menumanagement.js"></script>
 
 </body>
 </html>

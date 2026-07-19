@@ -98,7 +98,7 @@ $inventoryAlerts = [
                 <i class="fa-solid fa-gear"></i>
             </button>
 
-            <button class="new-order-btn">
+            <button class="new-order-btn" id="openAddModal">
                 + New Order
             </button>
             <div class="profile-circle" onclick="window.location='profile.php'">
