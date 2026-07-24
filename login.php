@@ -28,7 +28,16 @@ if($_SERVER["REQUEST_METHOD"]== "POST"){
         $user = $result->fetch_assoc();
 
         if(password_verify(($password),$user["password"])){
+
+            $getVendorID = $conn->prepare("SELECT vendor_id FROM vendor_tbl WHERE user_id = ?");
+            $getVendorID -> bind_param("i",$user["user_id"]);
+            $getVendorID -> execute();
+            $vendorResult = $getVendorID -> get_result();
+            $vendor = $vendorResult->fetch_assoc();
+
             $_SESSION["user_id"] = $user["user_id"];
+            $_SESSION["vendor_id"] = $vendor["vendor_id"];
+            
 
             header("Location: ./admindashboard.php");
         }else{

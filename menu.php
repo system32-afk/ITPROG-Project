@@ -1,5 +1,5 @@
 <?php
-
+require_once "database.php";
 /* Dummy Menu Items */
 
 $menuItems = [
@@ -68,7 +68,13 @@ $menuItems = [
     ]
 
 ];
-
+//TODO MAKE THIS I
+$vendorID = $_GET['vendor'];
+$getVendorInfo = $conn->prepare("SELECT store_name FROM vendor_tbl WHERE vendor_id = ?");
+$getVendorInfo -> bind_param("i",$vendorID);
+$getVendorInfo -> execute();
+$vendorResult = $getVendorInfo -> get_result();
+$vendorInfo = $vendorResult -> fetch_assoc();
 ?>
 
 <!DOCTYPE html>
@@ -107,9 +113,8 @@ $menuItems = [
 
             <div>
 
-                <h1>Pabili</h1>
+                <h1><?php echo $vendorInfo["store_name"]?></h1>
 
-                <p>Kitchen Station #04</p>
 
             </div>
 

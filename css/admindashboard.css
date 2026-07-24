@@ -1,15 +1,18 @@
 :root{
-    --primary:#0052FF;
-    --secondary:#4338CA;
-    --tertiary:#BF3003;
-    --neutral:#1E293B;
+    --primary: #7ED957;      /* Fresh green - main actions */
+    --secondary: #38B6FF;    /* Sky blue - accents */
 
-    --bg:#F5F7FF;
-    --sidebar:#EEF2FF;
-    --card:#FFFFFF;
-    --border:#DDE5F5;
-    --text:#1E293B;
-    --muted:#64748B;
+    --tertiary: #FFB703;     /* Warm yellow - highlights/offers */
+
+    --neutral: #2563EB;      /* Deeper blue - hover states/buttons */
+
+    --bg: #F4FAFF;           /* Very light blue background */
+    --sidebar: #E8F4FF;      /* Soft blue sidebar */
+    --card: #FFFFFF;         /* White cards */
+    --border: #D8E8F5;       /* Subtle blue-gray border */
+
+    --text: #16324F;         /* Dark blue text */
+    --muted: #64748B;        /* Gray secondary text */
 }
 /* admin dashboard css start */
 
@@ -494,9 +497,9 @@ tbody tr:hover{
 
 .qr-placeholder{
 
-    width:220px;
+    width:180px;
 
-    height:220px;
+    height:180px;
 
     margin:20px auto;
 
@@ -510,14 +513,41 @@ tbody tr:hover{
 
     align-items:center;
 
+    margin-bottom: 2rem;
+}
+.qr-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
-.qr-placeholder i{
+.download-btn{
+    display:inline-block;
+    margin-top:10px;
+    padding:12px 24px;
 
-    font-size:120px;
+    background:var(--primary);
+    color:white;
 
-    color:var(--primary);
+    text-decoration:none;
+    font-weight:600;
+    font-size:15px;
 
+    border-radius:8px;
+    transition:all .2s ease;
+
+    box-shadow:0 4px 12px rgba(0,0,0,.12);
+}
+
+.download-btn:hover{
+    background:#69c84d; 
+    transform:translateY(-2px);
+    box-shadow:0 8px 20px rgba(0,0,0,.18);
+}
+
+.download-btn:active{
+    transform:translateY(0);
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
 }
 
 /* admin dashboard css end */

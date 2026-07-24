@@ -1,4 +1,5 @@
 <?php
+require_once "database.php";
 /*placeholder data, replace once we have db */
 $dashboardStats = [
     "ordersToday" => 36,
@@ -23,6 +24,22 @@ $inventoryAlerts = [
     ["item" => "Ingredient C", "message" => "🟠Expiring Soon"]
 ];
 
+//check if user has loggedin
+// if(!isset($_SESSION)&&!isset($_SESSION["vendor_id"])){
+//     header("Location: ./login.php");
+// }
+
+// $vendorID = $_SESSION["vendor_id"];
+$vendorID = 1;
+
+$getVendorInfo = $conn->prepare("SELECT store_name FROM vendor_tbl WHERE vendor_id = ?");
+$getVendorInfo -> bind_param("i",$vendorID);
+$getVendorInfo -> execute();
+$vendorResult = $getVendorInfo -> get_result();
+$vendorInfo = $vendorResult -> fetch_assoc();
+
+
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -42,8 +59,8 @@ $inventoryAlerts = [
 <div class="sidebar">
 
     <div class="logo">
-        <h2>Kitchen Admin</h2>
-        <p>Station #04</p>
+        <h2><?php echo $vendorInfo["store_name"]?></h2>
+        
     </div>
 
     <ul class="menu">
@@ -249,13 +266,16 @@ $inventoryAlerts = [
 
         <div class="qr-placeholder">
 
-            <i class="fa-solid fa-qrcode"></i>
+            <img src="generateQR.php?id=<?php echo $vendorID; ?>" class="qr-image" alt="QR Code">
 
         </div>
 
-        <p>
-            Scan this QR code to order.
-        </p>
+        <a
+            href="generateQR.php?id=<?php echo $vendorID; ?>&download=1"
+            class="download-btn"
+            download>
+            Download QR Code
+        </a>
 
     </div>
 
