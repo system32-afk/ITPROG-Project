@@ -1,28 +1,6 @@
 <?php
 require_once "database.php";
-/*placeholder data, replace once we have db */
-$dashboardStats = [
-    "ordersToday" => 36,
-    "revenueToday" => "₱12,000",
-    "activeOrders" => 25,
-    "lowStockItems" => 12
-];
-
-$recentOrders = [
-    ["id" => "007", "customer" => "Customer G", "status" => "Pending"],
-    ["id" => "006", "customer" => "Customer F", "status" => "Preparing"],
-    ["id" => "005", "customer" => "Customer E", "status" => "Ready"],
-    ["id" => "004", "customer" => "Customer D", "status" => "Preparing"],
-    ["id" => "003", "customer" => "Customer C", "status" => "Pending"],
-    ["id" => "002", "customer" => "Customer B", "status" => "Ready"],
-    ["id" => "001", "customer" => "Customer A", "status" => "Preparing"]
-];
-
-$inventoryAlerts = [
-    ["item" => "Ingredient A", "message" => "🔴Low Stock"],
-    ["item" => "Ingredient B", "message" => "🟡Restock Soon"],
-    ["item" => "Ingredient C", "message" => "🟠Expiring Soon"]
-];
+require_once "dashboard_data.php";
 
 //check if user has loggedin
 // if(!isset($_SESSION)&&!isset($_SESSION["vendor_id"])){
@@ -33,12 +11,14 @@ $inventoryAlerts = [
 $vendorID = 1;
 
 $getVendorInfo = $conn->prepare("SELECT store_name FROM vendor_tbl WHERE vendor_id = ?");
-$getVendorInfo -> bind_param("i",$vendorID);
-$getVendorInfo -> execute();
-$vendorResult = $getVendorInfo -> get_result();
-$vendorInfo = $vendorResult -> fetch_assoc();
+$getVendorInfo->bind_param("i", $vendorID);
+$getVendorInfo->execute();
+$vendorResult = $getVendorInfo->get_result();
+$vendorInfo = $vendorResult->fetch_assoc();
 
-
+$dashboardStats = getDashboardStats($conn, $vendorID);
+$recentOrders = getRecentOrders($conn, $vendorID);
+$inventoryAlerts = getInventoryAlerts($conn, $vendorID);
 
 ?>
 <!DOCTYPE html>
@@ -59,8 +39,8 @@ $vendorInfo = $vendorResult -> fetch_assoc();
 <div class="sidebar">
 
     <div class="logo">
-        <h2><?php echo $vendorInfo["store_name"]?></h2>
-        
+        <h2><?php echo htmlspecialchars($vendorInfo["store_name"]); ?></h2>
+
     </div>
 
     <ul class="menu">
@@ -131,22 +111,22 @@ $vendorInfo = $vendorResult -> fetch_assoc();
 
         <div class="card">
             <span class="card-label">Orders Today</span>
-            <h2><?php echo $dashboardStats['ordersToday']; ?></h2>
+            <h2 id="ordersTodayStat"><?php echo $dashboardStats['ordersToday']; ?></h2>
         </div>
 
         <div class="card">
             <span class="card-label">Revenue Today</span>
-            <h2><?php echo $dashboardStats['revenueToday']; ?></h2>
+            <h2 id="revenueTodayStat"><?php echo $dashboardStats['revenueToday']; ?></h2>
         </div>
 
         <div class="card">
             <span class="card-label">Active Orders</span>
-            <h2><?php echo $dashboardStats['activeOrders']; ?></h2>
+            <h2 id="activeOrdersStat"><?php echo $dashboardStats['activeOrders']; ?></h2>
         </div>
 
         <div class="card">
             <span class="card-label">Low Stock Items</span>
-            <h2><?php echo $dashboardStats['lowStockItems']; ?></h2>
+            <h2 id="lowStockStat"><?php echo $dashboardStats['lowStockItems']; ?></h2>
         </div>
 
     </div>
@@ -173,15 +153,21 @@ $vendorInfo = $vendorResult -> fetch_assoc();
 
                     <tbody id="ordersTable">
 
-                    <?php foreach(array_slice($recentOrders, 0, 5) as $order): ?>
+                    <?php if (empty($recentOrders)): ?>
+                        <tr>
+                            <td colspan="3">No orders yet.</td>
+                        </tr>
+                    <?php endif; ?>
+
+                    <?php foreach ($recentOrders as $order): ?>
 
                         <tr onclick="window.location='vieworder.php?id=<?php echo $order['id']; ?>'">
-                            <td><?php echo $order['id']; ?></td>
-                            <td><?php echo $order['customer']; ?></td>
+                            <td><?php echo htmlspecialchars($order['id']); ?></td>
+                            <td><?php echo htmlspecialchars($order['customer']); ?></td>
 
                             <td>
                                 <span class="status <?php echo strtolower($order['status']); ?>">
-                                    <?php echo $order['status']; ?>
+                                    <?php echo htmlspecialchars($order['status']); ?>
                                 </span>
                             </td>
                         </tr>
@@ -204,21 +190,34 @@ $vendorInfo = $vendorResult -> fetch_assoc();
                     <h3>Inventory Alerts</h3>
                 </div>
 
-                <?php foreach($inventoryAlerts as $alert): ?>
+                <div id="inventoryAlertsList">
 
-                    <div class="alert-item">
+                    <?php if (empty($inventoryAlerts)): ?>
 
-                        <div class="alert-title">
-                            <?php echo $alert['item']; ?>
+                        <div class="alert-item">
+                            <div class="alert-title">All good</div>
+                            <div class="alert-text">No stock or expiry alerts right now.</div>
                         </div>
 
-                        <div class="alert-text">
-                            <?php echo $alert['message']; ?>
+                    <?php endif; ?>
+
+                    <?php foreach ($inventoryAlerts as $alert): ?>
+
+                        <div class="alert-item">
+
+                            <div class="alert-title">
+                                <?php echo htmlspecialchars($alert['item']); ?>
+                            </div>
+
+                            <div class="alert-text">
+                                <?php echo $alert['message']; ?>
+                            </div>
+
                         </div>
 
-                    </div>
+                    <?php endforeach; ?>
 
-                <?php endforeach; ?>
+                </div>
 
             </div>
 
@@ -234,11 +233,11 @@ $vendorInfo = $vendorResult -> fetch_assoc();
                     View Live Queue
                 </button>
 
-                <button class="action-btn">
+                <button class="action-btn" onclick="window.location='inventory.php'">
                     Manage Inventory
                 </button>
 
-                <button class="action-btn">
+                <button class="action-btn" onclick="window.location='menumanagement.php'">
                     Manage Menu
                 </button>
 

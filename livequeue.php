@@ -1,153 +1,57 @@
 <?php
+require_once "database.php";
 
-$liveOrders = [
+// TODO: swap for $_SESSION['vendor_id'] once login/auth is wired up.
+$vendorId = 1;
 
-    [
-        "order_id" => 4921,
-        "vendor_id" => 1,
-        "customer_name" => "Customer A",
-        "customer_contact" => "09171234567",
-        "payment_method" => "Cash",
-        "status" => "Priority",
-        "target" => "15m",
-        "created_at" => "12m Ago",
+$stmt = $conn->prepare(
+    "SELECT order_id, customer_name, customer_contact, payment_method, status, target_minutes, created_at
+    FROM orders_tbl
+    WHERE vendor_id = ? AND status NOT IN ('done','canceled')
+    ORDER BY created_at ASC"
+);
+$stmt->bind_param("i", $vendorId);
+$stmt->execute();
+$orders = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-        "items" => [
+$itemStmt = $conn->prepare(
+    "SELECT oi.order_item_id, oi.item_id, oi.quantity, oi.price, m.name, m.station
+    FROM orderitems_tbl oi
+    JOIN menuitems_tbl m ON oi.item_id = m.item_id
+    WHERE oi.order_id = ?"
+);
 
-            [
-                "order_item_id" => 1,
-                "item_id" => 1,
-                "quantity" => 2,
-                "price" => 180,
-                "name" => "Menu Item A",
-                "station" => "GRILL"
-            ],
+$liveOrders = [];
+$delayedCount = 0;
+$now = time();
 
-            [
-                "order_item_id" => 2,
-                "item_id" => 2,
-                "quantity" => 1,
-                "price" => 95,
-                "name" => "Menu Item B",
-                "station" => "FRYER"
-            ],
+foreach ($orders as $order) {
+    $itemStmt->bind_param("i", $order['order_id']);
+    $itemStmt->execute();
+    $order['items'] = $itemStmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-            [
-                "order_item_id" => 3,
-                "item_id" => 3,
-                "quantity" => 1,
-                "price" => 70,
-                "name" => "Menu Item C",
-                "station" => "COLD"
-            ]
+    $createdTs = strtotime($order['created_at']);
+    $elapsedMinutes = max(0, (int)floor(($now - $createdTs) / 60));
+    $overrunMinutes = $elapsedMinutes - (int)$order['target_minutes'];
+    $isDelayed = $overrunMinutes > 0;
 
-        ]
+    // "Delayed" overrides the display badge/class, but the real status
+    // column underneath (pending/priority/preparing) is left untouched --
+    // see orders_api.php for why it's computed instead of stored.
+    $order['display_status'] = $isDelayed ? "Delayed" : ucfirst($order['status']);
+    $order['elapsed_display'] = $elapsedMinutes . "m Ago";
+    $order['target_display'] = $order['target_minutes'] . "m";
+    $order['overrun_display'] = "Exceeded by " . $overrunMinutes . "m";
+    $order['quantity_total'] = array_sum(array_column($order['items'], 'quantity'));
 
-    ],
+    if ($isDelayed) {
+        $delayedCount++;
+    }
 
-    [
-        "order_id" => 4922,
-        "vendor_id" => 1,
-        "customer_name" => "Customer B",
-        "customer_contact" => "09171234568",
-        "payment_method" => "GCash",
-        "status" => "Preparing",
-        "target" => "10m",
-        "created_at" => "5m Ago",
+    $liveOrders[] = $order;
+}
 
-        "items" => [
-
-            [
-                "order_item_id" => 4,
-                "item_id" => 4,
-                "quantity" => 1,
-                "price" => 150,
-                "name" => "Menu Item D",
-                "station" => "PREP"
-            ],
-
-            [
-                "order_item_id" => 5,
-                "item_id" => 5,
-                "quantity" => 1,
-                "price" => 80,
-                "name" => "Menu Item E",
-                "station" => "COLD"
-            ]
-
-        ]
-
-    ],
-
-    [
-        "order_id" => 4923,
-        "vendor_id" => 1,
-        "customer_name" => "Customer C",
-        "customer_contact" => "09171234569",
-        "payment_method" => "Cash",
-        "status" => "Pending",
-        "target" => "15m",
-        "created_at" => "2m Ago",
-
-        "items" => [
-
-            [
-                "order_item_id" => 6,
-                "item_id" => 6,
-                "quantity" => 2,
-                "price" => 210,
-                "name" => "Menu Item F",
-                "station" => "GRILL"
-            ],
-
-            [
-                "order_item_id" => 7,
-                "item_id" => 7,
-                "quantity" => 1,
-                "price" => 60,
-                "name" => "Menu Item G",
-                "station" => "COLD"
-            ]
-
-        ]
-
-    ],
-
-    [
-        "order_id" => 4918,
-        "vendor_id" => 1,
-        "customer_name" => "Customer D",
-        "customer_contact" => "09171234570",
-        "payment_method" => "GCash",
-        "status" => "Delayed",
-        "target" => "15m",
-        "created_at" => "22m Ago",
-
-        "items" => [
-
-            [
-                "order_item_id" => 8,
-                "item_id" => 8,
-                "quantity" => 1,
-                "price" => 170,
-                "name" => "Menu Item H",
-                "station" => "FRYER"
-            ],
-
-            [
-                "order_item_id" => 9,
-                "item_id" => 9,
-                "quantity" => 2,
-                "price" => 120,
-                "name" => "Menu Item I",
-                "station" => "GRILL"
-            ]
-
-        ]
-
-    ]
-
-];
+$activeOrdersCount = count($liveOrders);
 
 ?>
 
@@ -259,7 +163,7 @@ $liveOrders = [
             <span class="card-label">
                 Active Orders
             </span>
-            <h2 class="active-orders-number">24</h2>
+            <h2 class="active-orders-number"><?= $activeOrdersCount ?></h2>
         </div>
 
         <div class="card">
@@ -267,7 +171,7 @@ $liveOrders = [
                 Currently Delayed
             </span>
             <h2 class="delayed-number">
-                1
+                <?= $delayedCount ?>
             </h2>
         </div>
 
@@ -297,18 +201,16 @@ $liveOrders = [
 
     <div class="live-queue-container">
 
-        <?php foreach($liveOrders as $order): ?>
+        <?php foreach ($liveOrders as $order): ?>
 
         <div
-            class="order-card <?php echo strtolower($order['status']); ?>"
+            class="order-card <?php echo strtolower($order['display_status']); ?>"
 
             data-id="<?php echo $order['order_id']; ?>"
 
-            data-status="<?php echo strtolower($order['status']); ?>"
+            data-status="<?php echo strtolower($order['display_status']); ?>"
 
-            data-quantity="<?php
-                echo array_sum(array_column($order['items'],'quantity'));
-            ?>"
+            data-quantity="<?php echo $order['quantity_total']; ?>"
         >
 
             <div class="order-header">
@@ -317,8 +219,8 @@ $liveOrders = [
                     #<?php echo $order['order_id']; ?>
                 </h3>
 
-                <span class="order-status-badge <?php echo strtolower($order['status']); ?>">
-                    <?php echo $order['status']; ?>
+                <span class="order-status-badge <?php echo strtolower($order['display_status']); ?>">
+                    <?php echo htmlspecialchars($order['display_status']); ?>
                 </span>
 
             </div>
@@ -326,21 +228,21 @@ $liveOrders = [
             <div class="order-content">
 
                 <p class="customer-name">
-                    <?php echo $order['customer_name']; ?>
+                    <?php echo htmlspecialchars($order['customer_name']); ?>
                 </p>
 
                 <p class="order-time">
 
-                    <?php echo $order['created_at']; ?>
+                    <?php echo htmlspecialchars($order['elapsed_display']); ?>
 
-                    <?php if($order['status']=="Delayed"): ?>
+                    <?php if ($order['display_status'] === "Delayed"): ?>
 
-                    • Exceeded by 7m
+                    • <?php echo htmlspecialchars($order['overrun_display']); ?>
 
                     <?php else: ?>
 
                         • Target:
-                        <?php echo $order['target']; ?>
+                        <?php echo htmlspecialchars($order['target_display']); ?>
 
                     <?php endif; ?>
 
@@ -348,7 +250,7 @@ $liveOrders = [
 
                 <hr>
 
-                <?php foreach($order['items'] as $item): ?>
+                <?php foreach ($order['items'] as $item): ?>
 
                 <div class="order-item">
 
@@ -357,11 +259,11 @@ $liveOrders = [
                     </span>
 
                     <span class="item-name">
-                        <?php echo $item['name']; ?>
+                        <?php echo htmlspecialchars($item['name']); ?>
                     </span>
 
                     <span class="item-station">
-                        <?php echo $item['station']; ?>
+                        <?php echo htmlspecialchars($item['station'] ?? ''); ?>
                     </span>
 
                 </div>
@@ -394,7 +296,7 @@ $liveOrders = [
 
             </div>
 
-            <?php if($order["payment_method"]=="Cash"): ?>
+            <?php if ($order["payment_method"] === "Cash"): ?>
 
             <div class="order-actions">
 

@@ -1,57 +1,47 @@
 <?php
+require_once "database.php";
 
-$inventoryItems = [
+// swap for $_SESSION['vendor_id'] once login/auth is wired up.
+$vendorId = 1;
 
-    [
-        "id" => 1,
-        "name" => "Chicken Breast",
-        "stock" => 15.5,
-        "unit" => "kg",
-        "threshold" => 10,
-        "expiry" => "2026-10-18"
-    ],
+$stmt = $conn->prepare(
+    "SELECT inventory_id, item_name, unit, qty_on_hand, reorder_threshold, expiry_date, is_perishable
+    FROM inventory
+    WHERE vendor_id = ?
+    ORDER BY item_name ASC"
+);
+$stmt->bind_param("i", $vendorId);
+$stmt->execute();
+$result = $stmt->get_result();
 
-    [
-        "id" => 2,
-        "name" => "Tomatoes",
-        "stock" => 8,
-        "unit" => "kg",
-        "threshold" => 10,
-        "expiry" => "2026-07-01"
-    ],
-
-    [
-        "id" => 3,
-        "name" => "Whole Milk",
-        "stock" => 48,
-        "unit" => "Liters",
-        "threshold" => 10,
-        "expiry" => "2026-10-12"
-    ],
-
-    [
-        "id" => 4,
-        "name" => "Baby Spinach",
-        "stock" => 22,
-        "unit" => "kg",
-        "threshold" => 10,
-        "expiry" => "2026-10-15"
-    ]
-
-];
-
-$totalItems = count($inventoryItems);
+$inventoryItems = [];
 $lowStock = 0;
 $expiringSoon = 0;
+$thirtyDaysOut = strtotime("+30 days");
 
-foreach($inventoryItems as $item){
-    if($item["stock"] <= $item["threshold"]){
+while ($row = $result->fetch_assoc()) {
+    if ($row["qty_on_hand"] <= 0) {
+        $status = "Out of Stock";
+        $class = "out";
+    } elseif ($row["qty_on_hand"] <= $row["reorder_threshold"]) {
+        $status = "Low Stock";
+        $class = "low";
+    } else {
+        $status = "In Stock";
+        $class = "good";
+    }
+
+    $row["status"] = $status;
+    $row["status_class"] = $class;
+
+    if ($class !== "good") {
         $lowStock++;
     }
-
-    if(strtotime($item["expiry"]) <= strtotime("+30 days")){
+    if ($row["expiry_date"] && strtotime($row["expiry_date"]) <= $thirtyDaysOut) {
         $expiringSoon++;
     }
+
+    $inventoryItems[] = $row;
 }
 ?>
 <!DOCTYPE html>
@@ -110,12 +100,12 @@ Add New Stock
 
 <div class="card">
 <span class="card-label">Low Stock Items</span>
-<h2><?php echo $lowStock; ?></h2>
+<h2 id="lowStockCount"><?php echo $lowStock; ?></h2>
 </div>
 
 <div class="card">
 <span class="card-label">Expiring Soon</span>
-<h2><?php echo $expiringSoon; ?></h2>
+<h2 id="expiringSoonCount"><?php echo $expiringSoon; ?></h2>
 </div>
 
 </div>
@@ -137,35 +127,23 @@ Add New Stock
 
 <tbody>
 
-<?php foreach($inventoryItems as $item):
+<?php foreach ($inventoryItems as $item): ?>
 
-if($item["stock"]<=0){
-    $status="Out of Stock";
-    $class="out";
-}elseif($item["stock"]<=$item["threshold"]){
-    $status="Low Stock";
-    $class="low";
-}else{
-    $status="In Stock";
-    $class="good";
-}
-?>
+<tr data-id="<?= (int)$item['inventory_id'] ?>" data-perishable="<?= (int)$item['is_perishable'] ?>">
 
-<tr>
+<td><?= htmlspecialchars($item["item_name"]) ?></td>
 
-<td><?php echo $item["name"]; ?></td>
+<td><?= htmlspecialchars($item["qty_on_hand"]) ?></td>
 
-<td><?php echo $item["stock"]; ?></td>
-
-<td><?php echo $item["unit"]; ?></td>
+<td><?= htmlspecialchars($item["unit"]) ?></td>
 
 <td>
-<span class="inventory-status <?php echo $class; ?>">
-<?php echo $status; ?>
+<span class="inventory-status <?= htmlspecialchars($item["status_class"]) ?>">
+<?= htmlspecialchars($item["status"]) ?>
 </span>
 </td>
 
-<td><?php echo date("M d, Y",strtotime($item["expiry"])); ?></td>
+<td><?= $item["expiry_date"] ? date("M d, Y", strtotime($item["expiry_date"])) : "-" ?></td>
 
 <td>
 
@@ -324,29 +302,14 @@ if($item["stock"]<=0){
 
 <thead>
 <tr>
-<th>Date & Time</th>
+<th>Date &amp; Time</th>
 <th>Action</th>
-<th>User</th>
 <th>Change</th>
 </tr>
 </thead>
 
-<tbody>
-
-<tr>
-<td>Jul 18, 2026 9:45 AM</td>
-<td>Updated</td>
-<td>Einzenn Ham</td>
-<td>Stock changed from 20 kg → 35 kg</td>
-</tr>
-
-<tr>
-<td>Jul 17, 2026 3:10 PM</td>
-<td>Added</td>
-<td>Einzenn Ham</td>
-<td>Ingredient created</td>
-</tr>
-
+<tbody id="historyTableBody">
+<!-- populated by inventory.js via inventory_api.php?action=history -->
 </tbody>
 
 </table>

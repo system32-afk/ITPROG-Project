@@ -1,3 +1,33 @@
+const API_URL = "apis/orders_api.php";
+
+/* ============================
+   HELPER
+============================ */
+
+async function callApi(action, params = {}, method = "GET") {
+    let response;
+
+    if (method === "GET") {
+        const query = new URLSearchParams({ action, ...params });
+        response = await fetch(`${API_URL}?${query.toString()}`);
+    } else {
+        const body = new URLSearchParams({ action, ...params });
+        response = await fetch(API_URL, { method: "POST", body });
+    }
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.error || "Something went wrong.");
+    }
+
+    return data;
+}
+
+/* ============================
+   SEARCH
+============================ */
+
 const searchInput = document.getElementById("searchInput");
 
 if (searchInput) {
@@ -20,110 +50,154 @@ if (searchInput) {
 
 }
 
+/* ============================
+   CANCEL
+============================ */
+
 document.querySelectorAll(".order-card .cancel-btn").forEach(button => {
 
-    button.addEventListener("click", function(e){
+    button.addEventListener("click", async function (e) {
 
         e.stopPropagation();
 
-        if(confirm("Cancel this order?")){
+        if (!confirm("Cancel this order?")) return;
 
-            this.closest(".order-card").remove();
+        const card = this.closest(".order-card");
+        const orderId = card.dataset.id;
 
+        try {
+            await callApi("updateStatus", { order_id: orderId, status: "canceled" }, "POST");
+            card.remove();
+        } catch (err) {
+            alert(err.message);
         }
 
     });
 
 });
+
+/* ============================
+   DONE
+============================ */
 
 document.querySelectorAll(".done-btn").forEach(button => {
 
-    button.addEventListener("click", function(e){
+    button.addEventListener("click", async function (e) {
 
         e.stopPropagation();
 
-        if(confirm("Mark order as completed?")){
+        if (!confirm("Mark order as completed?")) return;
 
-            this.closest(".order-card").remove();
+        const card = this.closest(".order-card");
+        const orderId = card.dataset.id;
 
+        try {
+            await callApi("updateStatus", { order_id: orderId, status: "done" }, "POST");
+            card.remove();
+        } catch (err) {
+            alert(err.message);
         }
 
     });
 
 });
 
-document.querySelectorAll(".process-btn").forEach(button=>{
+/* ============================
+   PROCESS (-> preparing)
+============================ */
 
-    button.addEventListener("click",function(e){
+document.querySelectorAll(".process-btn").forEach(button => {
+
+    button.addEventListener("click", async function (e) {
 
         e.stopPropagation();
 
-        const card=this.closest(".order-card");
+        const card = this.closest(".order-card");
+        const orderId = card.dataset.id;
 
-        const badge=card.querySelector(".order-status-badge");
+        try {
+            await callApi("updateStatus", { order_id: orderId, status: "preparing" }, "POST");
 
-        badge.textContent="Preparing";
+            const badge = card.querySelector(".order-status-badge");
+            badge.textContent = "Preparing";
+            badge.className = "order-status-badge preparing";
 
-        badge.className="order-status-badge preparing";
-
-        card.classList.remove("priority","pending","delayed");
-        card.classList.add("preparing");
+            card.classList.remove("priority", "pending", "delayed");
+            card.classList.add("preparing");
+            card.dataset.status = "preparing";
+        } catch (err) {
+            alert(err.message);
+        }
 
     });
 
 });
 
-document.querySelectorAll(".priority-btn").forEach(button=>{
+/* ============================
+   SET PRIORITY
+============================ */
 
-    button.addEventListener("click",function(e){
+document.querySelectorAll(".priority-btn").forEach(button => {
+
+    button.addEventListener("click", async function (e) {
 
         e.stopPropagation();
 
-        const card=this.closest(".order-card");
+        const card = this.closest(".order-card");
+        const orderId = card.dataset.id;
 
-        const badge=card.querySelector(".order-status-badge");
+        try {
+            await callApi("updateStatus", { order_id: orderId, status: "priority" }, "POST");
 
-        badge.textContent="Priority";
+            const badge = card.querySelector(".order-status-badge");
+            badge.textContent = "Priority";
+            badge.className = "order-status-badge priority";
 
-        badge.className="order-status-badge priority";
-
-        card.classList.remove("pending","preparing","delayed");
-        card.classList.add("priority");
+            card.classList.remove("pending", "preparing", "delayed");
+            card.classList.add("priority");
+            card.dataset.status = "priority";
+        } catch (err) {
+            alert(err.message);
+        }
 
     });
 
 });
+
+/* ============================
+   SORT (client-side, unchanged)
+============================ */
 
 const sortSelect = document.getElementById("sortOrders");
 
-sortSelect.addEventListener("change", function(){
+sortSelect.addEventListener("change", function () {
 
     const container = document.querySelector(".live-queue-container");
 
     const cards = [...container.querySelectorAll(".order-card:not(.empty-order-card)")];
 
-    if(this.value === "newest"){
+    if (this.value === "newest") {
 
-        cards.sort((a,b)=>
+        cards.sort((a, b) =>
             b.dataset.id - a.dataset.id
         );
 
     }
 
-    if(this.value === "quantity"){
+    if (this.value === "quantity") {
 
-        cards.sort((a,b)=>
+        cards.sort((a, b) =>
             b.dataset.quantity - a.dataset.quantity
         );
 
     }
 
-    if(this.value === "delayed"){
+    if (this.value === "delayed") {
 
-        cards.sort((a,b)=>{
+        cards.sort((a, b) => {
 
-            const aDelayed = a.dataset.status==="delayed";
-            const bDelayed = b.dataset.status==="delayed";
+            const aDelayed = a.dataset.status === "delayed";
+            const bDelayed = b.dataset.status === "delayed";
 
             return bDelayed - aDelayed;
 
@@ -131,7 +205,7 @@ sortSelect.addEventListener("change", function(){
 
     }
 
-    cards.forEach(card=>{
+    cards.forEach(card => {
 
         container.insertBefore(
             card,
@@ -141,6 +215,10 @@ sortSelect.addEventListener("change", function(){
     });
 });
 
+/* ============================
+   VERIFICATION CODE (client-side only, no DB persistence)
+============================ */
+
 const modal = document.getElementById("verificationModal");
 
 const codeText = document.getElementById("verificationCode");
@@ -149,29 +227,29 @@ const closeBtn = document.getElementById("closeModalBtn");
 
 const copyBtn = document.getElementById("copyCodeBtn");
 
-document.querySelectorAll(".verify-btn").forEach(button=>{
+document.querySelectorAll(".verify-btn").forEach(button => {
 
-    button.addEventListener("click",function(e){
+    button.addEventListener("click", function (e) {
 
         e.stopPropagation();
 
-        const code=Math.floor(100000+Math.random()*900000);
+        const code = Math.floor(100000 + Math.random() * 900000);
 
-        codeText.textContent=code;
+        codeText.textContent = code;
 
-        modal.style.display="flex";
+        modal.style.display = "flex";
 
     });
 
 });
 
-closeBtn.addEventListener("click",()=>{
+closeBtn.addEventListener("click", () => {
 
-    modal.style.display="none";
+    modal.style.display = "none";
 
 });
 
-copyBtn.addEventListener("click",()=>{
+copyBtn.addEventListener("click", () => {
 
     navigator.clipboard.writeText(codeText.textContent);
 
@@ -179,11 +257,11 @@ copyBtn.addEventListener("click",()=>{
 
 });
 
-window.addEventListener("click",function(e){
+window.addEventListener("click", function (e) {
 
-    if(e.target===modal){
+    if (e.target === modal) {
 
-        modal.style.display="none";
+        modal.style.display = "none";
 
     }
 
