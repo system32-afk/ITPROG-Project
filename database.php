@@ -11,11 +11,11 @@ $db_port = 3309;
 
 try {
     $conn = new mysqli(
-        $db_server,
-        $db_user,
-        $db_pass,
-        $db_name,
-        $db_port
+        getenv("MYSQLHOST"),
+        getenv("MYSQLUSER"),
+        getenv("MYSQLPASSWORD"),
+        getenv("MYSQL_DATABASE"),
+        getenv("MYSQL_PORT")
     );
 } catch (mysqli_sql_exception) {
     die("Database connection failed: " . $e->getMessage());
