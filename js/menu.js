@@ -51,8 +51,16 @@ const elements = {
 
     successModal: document.getElementById("successModal"),
     orderNumber: document.getElementById("orderNumber"),
-    continueOrderingBtn: document.getElementById("continueOrderingBtn")
+    continueOrderingBtn: document.getElementById("continueOrderingBtn"),
+
+    vendorID: document.getElementById("vendorID"),
+
+    verificationBtn: document.getElementById("verifyCashBtn")
 };
+
+ let activeOrderID = null; //tracks customers recent order for veri
+
+
 
 function peso(value) {
     return `₱${Number(value).toFixed(2)}`;
@@ -128,6 +136,8 @@ function loadItem(button) {
         price: Number(button.dataset.price)
     };
 
+    console.log(state.selectedItem);
+
     elements.modalImage.src = state.selectedItem.image;
     elements.modalName.textContent = state.selectedItem.name;
     elements.modalDescription.textContent = state.selectedItem.description;
@@ -149,7 +159,10 @@ function clearCart() {
 
 function addToCart() {
 
-    if (!state.selectedItem) return;
+    if (!state.selectedItem) {
+        console.log("item does not exist");
+        return;
+    };
 
     const existingItem = state.cart.find(item => item.id === state.selectedItem.id);
 
@@ -373,8 +386,10 @@ function filterMenu(search = "", category = "All") {
 
 elements.searchInput.addEventListener("input", () => {
 
-    const activeCategory =
-        document.querySelector(".category.active").textContent.trim();
+    const activeCategoryButton = document.querySelector(".category.active");
+    const activeCategory = activeCategoryButton
+        ? activeCategoryButton.textContent.trim()
+        : "All";
 
     filterMenu(elements.searchInput.value, activeCategory);
 
@@ -421,6 +436,12 @@ elements.closeItemModal.addEventListener("click", () => {
 
 });
 
+elements.closeCheckoutModal.addEventListener("click", () => {
+
+    closeModal(elements.checkoutModal);
+
+});
+
 elements.cartButton.addEventListener("click", openDrawer);
 
 elements.floatingCart.addEventListener("click", openDrawer);
@@ -462,6 +483,7 @@ elements.orderType.addEventListener("change", () => {
 
 elements.placeOrderBtn.addEventListener("click", () => {
 
+   
     if (
         elements.customerName.value.trim() === "" ||
         elements.customerContact.value.trim() === ""
@@ -474,7 +496,7 @@ elements.placeOrderBtn.addEventListener("click", () => {
     }
 
     const order = {
-
+        vendorID: elements.vendorID ? elements.vendorID.textContent.trim() : "",
         orderNumber: generateOrderNumber(),
 
         customer: {
@@ -496,15 +518,86 @@ elements.placeOrderBtn.addEventListener("click", () => {
 
     };
 
-    console.log(order);
+    fetch("./place_order.php", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(order)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            state.cart = [];
+            state.selectedItem = null;
+            state.quantity = 1;
 
-    closeModal(elements.checkoutModal);
 
-    elements.orderNumber.textContent = order.orderNumber;
+            activeOrderId = data.orderId; 
+            
 
-    openModal(elements.successModal);
+            //if payment method is cash, open verification modal
+            if (order.paymentMethod === "Cash") {
+                // Populate cash modal details
+                document.getElementById("cashOrderNumber").textContent = order.orderNumber;
+                document.getElementById("cashTotalAmount").textContent = `₱${order.total.toFixed(2)}`;
+                document.getElementById("cashVerificationCode").value = "";
+                document.getElementById("cashCodeError").textContent = "";
+
+                // open the cash vrification Modal
+                openModal(document.getElementById("cashVerificationModal"));
+            } else {
+                // non-cash orders skip verification
+                completeOrderUI(order.orderNumber);
+            }
+
+        } else {
+            alert(data.message);
+        }
+    });
+
+   
 
 });
+
+elements.verificationBtn.addEventListener("click", ()=>{
+    const codeInput = document.getElementById("cashVerificationCode");
+    const errorSpan = document.getElementById("cashCodeError");
+    const code = codeInput.value.trim();
+
+    if (code.length < 0) {
+        errorSpan.textContent = "Please enter the code provided by the cashier";
+        return;
+    }
+
+
+    console.log("order ID: ", activeOrderId);
+    fetch("./verify_order.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            orderId: activeOrderId,
+            verificationCode: code
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeModal(document.getElementById("cashVerificationModal"));
+            
+            // Get order number from UI display or state
+            const currentOrderNum = document.getElementById("cashOrderNumber").textContent;
+            completeOrderUI(currentOrderNum);
+        } else {
+            errorSpan.textContent = data.message;
+        }
+    })
+    .catch(err => {
+        console.error("Verification Error:", err);
+        errorSpan.textContent = "Failed to verify code. Please try again.";
+    });
+    
+})
 
 elements.continueOrderingBtn.addEventListener("click", () => {
 
@@ -512,9 +605,10 @@ elements.continueOrderingBtn.addEventListener("click", () => {
 
     elements.customerName.value = "";
     elements.customerContact.value = "";
-    elements.orderType.selectedIndex = 0;
-    elements.tableNumber.selectedIndex = 0;
-    elements.paymentMethod.selectedIndex = 0;
+    elements.orderType.value = "Dine In";
+    elements.tableNumber.value = "";
+    elements.tableNumber.disabled = false;
+    elements.paymentMethod.value = "Cash";
 
     closeModal(elements.successModal);
 
@@ -539,7 +633,6 @@ window.addEventListener("click", e => {
         closeModal(elements.successModal);
 
     }
-
 });
 
 window.addEventListener("keydown", e => {
@@ -554,7 +647,18 @@ window.addEventListener("keydown", e => {
     }
 
 });
+function completeOrderUI(orderNumber) {
+    state.cart = [];
+    state.selectedItem = null;
+    state.quantity = 1;
 
+    renderCart();
+    updateBadges();
+    
+    elements.orderNumber.textContent = orderNumber;
+    openModal(elements.successModal);
+    closeModal(elements.checkoutModal);
+}
 function initialize() {
 
     updateBadges();

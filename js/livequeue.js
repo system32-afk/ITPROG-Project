@@ -229,16 +229,9 @@ const copyBtn = document.getElementById("copyCodeBtn");
 
 document.querySelectorAll(".verify-btn").forEach(button => {
 
-    button.addEventListener("click", function (e) {
-
-        e.stopPropagation();
-
-        const code = Math.floor(100000 + Math.random() * 900000);
-
-        codeText.textContent = code;
-
+    button.addEventListener("click", () => {
+        codeText.textContent = button.dataset.code;
         modal.style.display = "flex";
-
     });
 
 });

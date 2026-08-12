@@ -12,7 +12,7 @@ function getDashboardStats(mysqli $conn, int $vendorId): array
     );
     $ordersTodayStmt->bind_param("i", $vendorId);
     $ordersTodayStmt->execute();
-    $ordersToday = (int)$ordersTodayStmt->get_result()->fetch_assoc()['total'];
+    $ordersToday = (int) $ordersTodayStmt->get_result()->fetch_assoc()['total'];
 
     // Counts all of today's orders except cancelled ones -- payment is
     // typically taken at order time (GCash) or on pickup (Cash) regardless
@@ -25,21 +25,21 @@ function getDashboardStats(mysqli $conn, int $vendorId): array
     );
     $revenueTodayStmt->bind_param("i", $vendorId);
     $revenueTodayStmt->execute();
-    $revenueToday = (float)$revenueTodayStmt->get_result()->fetch_assoc()['revenue'];
+    $revenueToday = (float) $revenueTodayStmt->get_result()->fetch_assoc()['revenue'];
 
     $activeOrdersStmt = $conn->prepare(
         "SELECT COUNT(*) AS total FROM orders_tbl WHERE vendor_id = ? AND status NOT IN ('done', 'canceled')"
     );
     $activeOrdersStmt->bind_param("i", $vendorId);
     $activeOrdersStmt->execute();
-    $activeOrders = (int)$activeOrdersStmt->get_result()->fetch_assoc()['total'];
+    $activeOrders = (int) $activeOrdersStmt->get_result()->fetch_assoc()['total'];
 
     $lowStockStmt = $conn->prepare(
         "SELECT COUNT(*) AS total FROM inventory WHERE vendor_id = ? AND qty_on_hand <= reorder_threshold"
     );
     $lowStockStmt->bind_param("i", $vendorId);
     $lowStockStmt->execute();
-    $lowStockItems = (int)$lowStockStmt->get_result()->fetch_assoc()['total'];
+    $lowStockItems = (int) $lowStockStmt->get_result()->fetch_assoc()['total'];
 
     return [
         "ordersToday" => $ordersToday,
@@ -71,8 +71,8 @@ function getRecentOrders(mysqli $conn, int $vendorId, int $limit = 5): array
         // Only orders still in the queue can be "Delayed" -- done/cancelled
         // orders keep their final status as-is.
         if (!in_array($order['status'], ['done', 'canceled'], true)) {
-            $elapsedMinutes = max(0, (int)floor(($now - strtotime($order['created_at'])) / 60));
-            if ($elapsedMinutes - (int)$order['target_minutes'] > 0) {
+            $elapsedMinutes = max(0, (int) floor(($now - strtotime($order['created_at'])) / 60));
+            if ($elapsedMinutes - (int) $order['target_minutes'] > 0) {
                 $displayStatus = "Delayed";
             }
         }

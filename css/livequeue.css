@@ -1,15 +1,18 @@
 :root{
-    --primary:#0052FF;
-    --secondary:#4338CA;
-    --tertiary:#BF3003;
-    --neutral:#1E293B;
+    --primary: #7ED957;      /* Fresh green - main actions */
+    --secondary: #38B6FF;    /* Sky blue - accents */
 
-    --bg:#F5F7FF;
-    --sidebar:#EEF2FF;
-    --card:#FFFFFF;
-    --border:#DDE5F5;
-    --text:#1E293B;
-    --muted:#64748B;
+    --tertiary: #FFB703;     /* Warm yellow - highlights/offers */
+
+    --neutral: #2563EB;      /* Deeper blue - hover states/buttons */
+
+    --bg: #F4FAFF;           /* Very light blue background */
+    --sidebar: #E8F4FF;      /* Soft blue sidebar */
+    --card: #FFFFFF;         /* White cards */
+    --border: #D8E8F5;       /* Subtle blue-gray border */
+
+    --text: #16324F;         /* Dark blue text */
+    --muted: #64748B;        /* Gray secondary text */
 }
 /* admin dashboard css start */
 

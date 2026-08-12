@@ -1,80 +1,29 @@
 <?php
+
+
+//TODO: implement database connection
+//TODO: add categories table for categories for each restaurant?
+//TODO: possibly fix UI for menu
+//TODO: polish up
 require_once "database.php";
 /* Dummy Menu Items */
 
-$menuItems = [
-
-    [
-        "id" => 1,
-        "name" => "Classic Burger",
-        "category" => "Meals",
-        "price" => 120,
-        "description" => "Juicy beef patty with cheese and lettuce.",
-        "image" => "https://placehold.co/600x400"
-    ],
-
-    [
-        "id" => 2,
-        "name" => "Chicken Burger",
-        "category" => "Meals",
-        "price" => 135,
-        "description" => "Crispy chicken with mayo.",
-        "image" => "https://placehold.co/600x400"
-    ],
-
-    [
-        "id" => 3,
-        "name" => "French Fries",
-        "category" => "Snacks",
-        "price" => 75,
-        "description" => "Golden crispy fries.",
-        "image" => "https://placehold.co/600x400"
-    ],
-
-    [
-        "id" => 4,
-        "name" => "Carbonara",
-        "category" => "Meals",
-        "price" => 180,
-        "description" => "Creamy pasta with bacon.",
-        "image" => "https://placehold.co/600x400"
-    ],
-
-    [
-        "id" => 5,
-        "name" => "Coke",
-        "category" => "Drinks",
-        "price" => 45,
-        "description" => "Ice cold soft drink.",
-        "image" => "https://placehold.co/600x400"
-    ],
-
-    [
-        "id" => 6,
-        "name" => "Iced Tea",
-        "category" => "Drinks",
-        "price" => 55,
-        "description" => "Fresh brewed iced tea.",
-        "image" => "https://placehold.co/600x400"
-    ],
-
-    [
-        "id" => 7,
-        "name" => "Chocolate Cake",
-        "category" => "Desserts",
-        "price" => 95,
-        "description" => "Rich chocolate cake slice.",
-        "image" => "https://placehold.co/600x400"
-    ]
-
-];
 //TODO MAKE THIS I
 $vendorID = $_GET['vendor'];
 $getVendorInfo = $conn->prepare("SELECT store_name FROM vendor_tbl WHERE vendor_id = ?");
-$getVendorInfo -> bind_param("i",$vendorID);
-$getVendorInfo -> execute();
-$vendorResult = $getVendorInfo -> get_result();
-$vendorInfo = $vendorResult -> fetch_assoc();
+$getVendorInfo->bind_param("i", $vendorID);
+$getVendorInfo->execute();
+$vendorResult = $getVendorInfo->get_result();
+$vendorInfo = $vendorResult->fetch_assoc();
+
+
+//GET menu items
+
+$getMenuItems = $conn->prepare("SELECT * FROM menuitems_tbl WHERE vendor_id = ?");
+$getMenuItems->bind_param("i", $vendorID);
+$getMenuItems->execute();
+
+$items = $getMenuItems->get_result()->fetch_all(MYSQLI_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -85,19 +34,13 @@ $vendorInfo = $vendorResult -> fetch_assoc();
 
     <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Pabili Mobile Ordering</title>
 
-    <link
-        rel="stylesheet"
-        href="css/menu.css">
+    <link rel="stylesheet" href="css/menu.css">
 
-    <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
     <link
         href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap"
@@ -106,14 +49,14 @@ $vendorInfo = $vendorResult -> fetch_assoc();
 </head>
 
 <body>
-
+    <p id="vendorID" hidden><?php echo $vendorID; ?></p>
     <div class="container">
 
         <header>
 
             <div>
 
-                <h1><?php echo $vendorInfo["store_name"]?></h1>
+                <h1><?php echo $vendorInfo["store_name"] ?></h1>
 
 
             </div>
@@ -132,47 +75,17 @@ $vendorInfo = $vendorResult -> fetch_assoc();
 
             <i class="fa-solid fa-magnifying-glass"></i>
 
-            <input
-                type="text"
-                id="searchInput"
-                placeholder="Search menu...">
+            <input type="text" id="searchInput" placeholder="Search menu...">
 
         </div>
 
-        <div class="categories">
-
-            <button class="category active">
-                All
-            </button>
-
-            <button class="category">
-                Meals
-            </button>
-
-            <button class="category">
-                Snacks
-            </button>
-
-            <button class="category">
-                Drinks
-            </button>
-
-            <button class="category">
-                Desserts
-            </button>
-
-        </div>
-
+        <!--Load Menu Items-->
         <div class="menu-grid">
-            <?php foreach ($menuItems as $item): ?>
+            <?php foreach ($items as $item): ?>
 
-                <div
-                    class="menu-card"
-                    data-category="<?php echo $item['category']; ?>">
+                <div class="menu-card" data-category="<?php echo $item['category']; ?>">
 
-                    <img
-                        src="<?php echo $item['image']; ?>"
-                        alt="<?php echo $item['name']; ?>">
+                    <img src="<?php echo $item['image_url']; ?>" alt="<?php echo $item['name']; ?>">
 
                     <div class="menu-content">
 
@@ -202,13 +115,10 @@ $vendorInfo = $vendorResult -> fetch_assoc();
 
                             </span>
 
-                            <button
-                                class="add-btn"
-                                data-id="<?php echo $item['id']; ?>"
-                                data-name="<?php echo $item['name']; ?>"
-                                data-price="<?php echo $item['price']; ?>"
+                            <button class="add-btn" data-id="<?php echo $item['item_id']; ?>"
+                                data-name="<?php echo $item['name']; ?>" data-price="<?php echo $item['price']; ?>"
                                 data-description="<?php echo $item['description']; ?>"
-                                data-image="<?php echo $item['image']; ?>">
+                                data-image="<?php echo $item['image_url']; ?>">
 
                                 <i class="fa-solid fa-plus"></i>
                                 Add
@@ -224,9 +134,7 @@ $vendorInfo = $vendorResult -> fetch_assoc();
 
         </div>
 
-        <button
-            id="floatingCart"
-            class="floating-cart">
+        <button id="floatingCart" class="floating-cart">
 
             <i class="fa-solid fa-cart-shopping"></i>
 
@@ -236,24 +144,17 @@ $vendorInfo = $vendorResult -> fetch_assoc();
 
         </button>
 
-                <div
-            id="itemModal"
-            class="modal">
+        <div id="itemModal" class="modal">
 
             <div class="modal-content">
 
-                <span
-                    id="closeItemModal"
-                    class="close-modal">
+                <span id="closeItemModal" class="close-modal">
 
                     &times;
 
                 </span>
 
-                <img
-                    id="modalImage"
-                    src=""
-                    alt="Food Image">
+                <img id="modalImage" src="" alt="Food Image">
 
                 <div class="modal-body">
 
@@ -261,15 +162,13 @@ $vendorInfo = $vendorResult -> fetch_assoc();
                         Item Name
                     </h2>
 
-                    <p
-                        id="modalDescription"
-                        class="modal-description">
+                    <p id="modalDescription" class="modal-description">
                         Item description goes here.
                     </p>
 
                     <div class="modal-price">
 
-                        ₱<span id="modalPrice">0</span>
+                        <span id="modalPrice">0</span>
 
                     </div>
 
@@ -307,14 +206,9 @@ $vendorInfo = $vendorResult -> fetch_assoc();
                         Special Instructions
                     </label>
 
-                    <textarea
-                        id="notes"
-                        rows="4"
-                        placeholder="Example: No onions, extra cheese..."></textarea>
+                    <textarea id="notes" rows="4" placeholder="Example: No onions, extra cheese..."></textarea>
 
-                    <button
-                        id="addToCartBtn"
-                        class="primary-btn">
+                    <button id="addToCartBtn" class="primary-btn">
 
                         Add to Cart
 
@@ -326,9 +220,7 @@ $vendorInfo = $vendorResult -> fetch_assoc();
 
         </div>
 
-                <div
-            id="cartDrawer"
-            class="cart-drawer">
+        <div id="cartDrawer" class="cart-drawer">
 
             <div class="cart-header">
 
@@ -336,9 +228,7 @@ $vendorInfo = $vendorResult -> fetch_assoc();
                     Your Cart
                 </h2>
 
-                <button
-                    id="closeCart"
-                    class="close-cart">
+                <button id="closeCart" class="close-cart">
 
                     <i class="fa-solid fa-xmark"></i>
 
@@ -346,9 +236,7 @@ $vendorInfo = $vendorResult -> fetch_assoc();
 
             </div>
 
-            <div
-                id="cartItems"
-                class="cart-items">
+            <div id="cartItems" class="cart-items">
 
                 <div class="empty-cart">
 
@@ -374,15 +262,13 @@ $vendorInfo = $vendorResult -> fetch_assoc();
 
                     <strong>
 
-                        ₱<span id="cartTotal">0</span>
+                        <span id="cartTotal">0</span>
 
                     </strong>
 
                 </div>
 
-                <button
-                    id="checkoutBtn"
-                    class="primary-btn">
+                <button id="checkoutBtn" class="primary-btn">
 
                     Proceed to Checkout
 
@@ -392,21 +278,15 @@ $vendorInfo = $vendorResult -> fetch_assoc();
 
         </div>
 
-        <div
-            id="drawerOverlay"
-            class="drawer-overlay">
+        <div id="drawerOverlay" class="drawer-overlay">
 
         </div>
 
-                <div
-            id="checkoutModal"
-            class="modal">
+        <div id="checkoutModal" class="modal">
 
             <div class="modal-content checkout-modal">
 
-                <span
-                    id="closeCheckoutModal"
-                    class="close-modal">
+                <span id="closeCheckoutModal" class="close-modal">
 
                     &times;
 
@@ -422,10 +302,7 @@ $vendorInfo = $vendorResult -> fetch_assoc();
                         Full Name
                     </label>
 
-                    <input
-                        type="text"
-                        id="customerName"
-                        placeholder="Enter your name">
+                    <input type="text" id="customerName" placeholder="Enter your name">
 
                 </div>
 
@@ -435,10 +312,7 @@ $vendorInfo = $vendorResult -> fetch_assoc();
                         Contact Number
                     </label>
 
-                    <input
-                        type="text"
-                        id="customerNumber"
-                        placeholder="09XXXXXXXXX">
+                    <input type="text" id="customerContact" placeholder="09XXXXXXXXX">
 
                 </div>
 
@@ -468,10 +342,7 @@ $vendorInfo = $vendorResult -> fetch_assoc();
                         Table Number
                     </label>
 
-                    <input
-                        type="number"
-                        id="tableNumber"
-                        placeholder="Optional">
+                    <input type="number" id="tableNumber" placeholder="Optional">
 
                 </div>
 
@@ -495,9 +366,7 @@ $vendorInfo = $vendorResult -> fetch_assoc();
 
                 </div>
 
-                <button
-                    id="placeOrderBtn"
-                    class="primary-btn">
+                <button id="placeOrderBtn" class="primary-btn">
 
                     Place Order
 
@@ -507,9 +376,40 @@ $vendorInfo = $vendorResult -> fetch_assoc();
 
         </div>
 
-                <div
-            id="successModal"
-            class="modal">
+        <div id="cashVerificationModal" class="modal">
+            <div class="modal-content cash-modal">
+                <div class="cash-icon">
+                    <i class="fa-solid fa-money-bill-wave"></i>
+                </div>
+
+                <h2>Cash Verification</h2>
+                <p>Please enter the code provided by the cashier to confirm your order.</p>
+
+                <div class="cash-details">
+                    <div class="cash-row">
+                        <span>Order Number</span>
+                        <strong id="cashOrderNumber">#0001</strong>
+                    </div>
+                    <div class="cash-row">
+                        <span>Total Amount</span>
+                        <strong id="cashTotalAmount">₱0.00</strong>
+                    </div>
+                </div>
+
+                <!-- Code Input Section -->
+                <div class="verification-input-group">
+                    <input type="text" id="cashVerificationCode" placeholder="0000" maxlength="4" inputmode="numeric"
+                        pattern="[0-9]*" autocomplete="off" />
+                    <span id="cashCodeError" class="error-message"></span>
+                </div>
+
+                <div class="modal-actions">
+                    <button id="verifyCashBtn" class="primary-btn">Verify & Place Order</button>
+                    <button id="cancelCashBtn" class="secondary-btn">Cancel</button>
+                </div>
+            </div>
+        </div>
+        <div id="successModal" class="modal">
 
             <div class="modal-content success-modal">
 
@@ -557,9 +457,7 @@ $vendorInfo = $vendorResult -> fetch_assoc();
 
                 </div>
 
-                <button
-                    id="continueOrderingBtn"
-                    class="primary-btn">
+                <button id="continueOrderingBtn" class="primary-btn">
 
                     Continue Ordering
 
@@ -576,4 +474,3 @@ $vendorInfo = $vendorResult -> fetch_assoc();
 </body>
 
 </html>
-    
