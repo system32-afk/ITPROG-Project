@@ -8,8 +8,8 @@ try {
         getenv("MYSQLHOST"),
         getenv("MYSQLUSER"),
         getenv("MYSQLPASSWORD"),
-        getenv("MYSQLDATABASE"),
-        getenv("MYSQLPORT")
+        getenv("MYSQL_DATABASE"),
+        getenv("MYSQL_PORT")
     );
 } catch (mysqli_sql_exception $e) {
     die("Database connection failed: " . $e->getMessage());
