@@ -3,17 +3,9 @@ require_once "database.php";
 require_once "dashboard_data.php";
 
 //check if user has loggedin
-<<<<<<< Updated upstream
 if (!isset($_SESSION) && !isset($_SESSION["vendor_id"])) {
     header("Location: ./login.php");
 }
-=======
-if(!isset($_SESSION[''])&&!isset($_SESSION["vendor_id"])){
-    header("Location: ./login.php");
-}
-
-$vendorID = $_SESSION["vendor_id"];
->>>>>>> Stashed changes
 
 $vendorID = $_SESSION["vendor_id"];
 $getVendorInfo = $conn->prepare("SELECT store_name FROM vendor_tbl WHERE vendor_id = ?");
