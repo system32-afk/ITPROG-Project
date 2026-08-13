@@ -3,9 +3,8 @@ require_once __DIR__ . "/../database.php";
 
 header('Content-Type: application/json');
 
-// TODO: swap for $_SESSION['vendor_id'] once login/auth is wired up.
-// Hardcoded to match the pattern already used in admindashboard.php.
-$vendorId = 1;
+session_start();
+$vendorId = $_SESSION['vendor_id'];
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
@@ -77,7 +76,7 @@ function listInventory(mysqli $conn, int $vendorId): void
     $thirtyDaysOut = strtotime("+30 days");
 
     while ($row = $result->fetch_assoc()) {
-        $statusInfo = computeStatus((float)$row['qty_on_hand'], (float)$row['reorder_threshold']);
+        $statusInfo = computeStatus((float) $row['qty_on_hand'], (float) $row['reorder_threshold']);
         $row['status'] = $statusInfo['status'];
         $row['status_class'] = $statusInfo['class'];
 
@@ -103,12 +102,12 @@ function listInventory(mysqli $conn, int $vendorId): void
 
 function addInventory(mysqli $conn, int $vendorId): void
 {
-    $name         = trim($_POST['name'] ?? '');
-    $unit         = trim($_POST['unit'] ?? '');
-    $stock        = $_POST['stock'] ?? null;
-    $threshold    = $_POST['threshold'] ?? 0;
-    $expiry       = $_POST['expiry'] ?? null;
-    $isPerishable = isset($_POST['is_perishable']) ? (int)$_POST['is_perishable'] : 1;
+    $name = trim($_POST['name'] ?? '');
+    $unit = trim($_POST['unit'] ?? '');
+    $stock = $_POST['stock'] ?? null;
+    $threshold = $_POST['threshold'] ?? 0;
+    $expiry = $_POST['expiry'] ?? null;
+    $isPerishable = isset($_POST['is_perishable']) ? (int) $_POST['is_perishable'] : 1;
 
     if ($name === '' || $unit === '' || $stock === null || $stock === '' || !is_numeric($stock)) {
         http_response_code(422);
@@ -130,7 +129,7 @@ function addInventory(mysqli $conn, int $vendorId): void
     $newId = $stmt->insert_id;
     logHistory($conn, $newId, $vendorId, "created", "Ingredient created");
 
-    $statusInfo = computeStatus((float)$stock, (float)$threshold);
+    $statusInfo = computeStatus((float) $stock, (float) $threshold);
 
     echo json_encode([
         "success" => true,
@@ -146,13 +145,13 @@ function addInventory(mysqli $conn, int $vendorId): void
 
 function updateInventory(mysqli $conn, int $vendorId): void
 {
-    $id        = (int)($_POST['inventory_id'] ?? 0);
-    $name      = trim($_POST['name'] ?? '');
-    $unit      = trim($_POST['unit'] ?? '');
-    $stock     = $_POST['stock'] ?? null;
+    $id = (int) ($_POST['inventory_id'] ?? 0);
+    $name = trim($_POST['name'] ?? '');
+    $unit = trim($_POST['unit'] ?? '');
+    $stock = $_POST['stock'] ?? null;
     $threshold = $_POST['threshold'] ?? null;
-    $expiry    = $_POST['expiry'] ?? null;
-    $reason    = trim($_POST['reason'] ?? '');
+    $expiry = $_POST['expiry'] ?? null;
+    $reason = trim($_POST['reason'] ?? '');
 
     if (!$id || $name === '' || $stock === null || $stock === '' || !is_numeric($stock) || $reason === '') {
         http_response_code(422);
@@ -200,7 +199,7 @@ function updateInventory(mysqli $conn, int $vendorId): void
     );
     logHistory($conn, $id, $vendorId, "updated", $description);
 
-    $statusInfo = computeStatus((float)$stock, (float)$threshold);
+    $statusInfo = computeStatus((float) $stock, (float) $threshold);
 
     echo json_encode([
         "success" => true,
@@ -217,7 +216,7 @@ function updateInventory(mysqli $conn, int $vendorId): void
 
 function deleteInventory(mysqli $conn, int $vendorId): void
 {
-    $id = (int)($_POST['inventory_id'] ?? 0);
+    $id = (int) ($_POST['inventory_id'] ?? 0);
 
     if (!$id) {
         http_response_code(422);
@@ -241,7 +240,7 @@ function deleteInventory(mysqli $conn, int $vendorId): void
 
 function getHistory(mysqli $conn, int $vendorId): void
 {
-    $id = (int)($_GET['inventory_id'] ?? 0);
+    $id = (int) ($_GET['inventory_id'] ?? 0);
 
     if (!$id) {
         http_response_code(422);

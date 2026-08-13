@@ -4,8 +4,8 @@ require_once __DIR__ . "/../dashboard_data.php";
 
 header('Content-Type: application/json');
 
-// TODO: swap for $_SESSION['vendor_id'] once login/auth is wired up.
-$vendorId = 1;
+session_start();
+$vendorId = $_SESSION['vendor_id'];
 
 $action = $_GET['action'] ?? '';
 
