@@ -1,19 +1,20 @@
 <?php
-
 require "vendor/autoload.php";
 require_once "database.php";
-require "vendor/setasign/fpdf/fpdf.php";
+
 session_start();
-//check if user has loggedin
+
+// 1. Corrected session check
 if (!isset($_SESSION["vendor_id"])) {
     header("Location: ./access_denied.php");
     exit();
 }
+
 $vendorID = $_SESSION["vendor_id"];
+
 /* ============================
    RESOLVE DATE RANGE
 ============================ */
-
 $range = $_GET['range'] ?? 'today';
 
 switch ($range) {
@@ -39,7 +40,6 @@ switch ($range) {
 /* ============================
    VENDOR INFO
 ============================ */
-
 $getVendorInfo = $conn->prepare("SELECT store_name FROM vendor_tbl WHERE vendor_id = ?");
 $getVendorInfo->bind_param("i", $vendorID);
 $getVendorInfo->execute();
@@ -48,12 +48,7 @@ $storeName = $vendorInfo['store_name'] ?? 'Store';
 
 /* ============================
    SUMMARY STATS
-   Revenue is computed from order line items (quantity * menu price)
-   rather than orders_tbl.total, same approach as the dashboard --
-   orderitems_tbl doesn't store its own price, so it always needs the
-   join back to menuitems_tbl.
 ============================ */
-
 $ordersStmt = $conn->prepare(
     "SELECT COUNT(*) AS total FROM orders_tbl
      WHERE vendor_id = ? AND DATE(created_at) BETWEEN ? AND ? AND status != 'canceled'"
@@ -86,7 +81,6 @@ $avgOrderValue = $totalOrders > 0 ? $totalRevenue / $totalOrders : 0;
 /* ============================
    REVENUE BY DAY
 ============================ */
-
 $dailyStmt = $conn->prepare(
     "SELECT DATE(o.created_at) AS day,
             COUNT(DISTINCT o.order_id) AS orders,
@@ -105,7 +99,6 @@ $dailyBreakdown = $dailyStmt->get_result()->fetch_all(MYSQLI_ASSOC);
 /* ============================
    REVENUE BY PAYMENT METHOD
 ============================ */
-
 $paymentStmt = $conn->prepare(
     "SELECT o.payment_method,
             COUNT(DISTINCT o.order_id) AS orders,
@@ -121,12 +114,8 @@ $paymentStmt->execute();
 $paymentBreakdown = $paymentStmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 /* ============================
-   PDF
-   FPDF's core fonts don't cover the ₱ glyph (it's outside
-   Windows-1252), so amounts are labeled "PHP" instead of ₱ here --
-   the rest of the app keeps using ₱ since browsers render UTF-8 fine.
+   PDF GENERATION
 ============================ */
-
 function money($amount)
 {
     return "PHP " . number_format((float) $amount, 2);
@@ -267,5 +256,11 @@ if (empty($paymentBreakdown)) {
 }
 
 $filename = 'SalesReport_' . ucfirst($range) . '_' . date('Ymd') . '.pdf';
+
+// Clear any output buffers before forcing download
+if (ob_get_length()) {
+    ob_end_clean();
+}
+
 $pdf->Output('D', $filename);
-?>
+exit();
