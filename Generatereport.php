@@ -7,6 +7,7 @@ session_start();
 //check if user has loggedin
 if (!isset($_SESSION) && !isset($_SESSION["vendor_id"])) {
     header("Location: ./access_denied.php");
+    exit();
 }
 $vendorID = $_SESSION["vendor_id"];
 /* ============================
