@@ -20,7 +20,7 @@ $vendorInfo = $vendorResult->fetch_assoc();
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
 
-$url = "http://192.168.1.23/ITPROG-Project/menu.php?vendor=" . $vendorID;
+$url = "https://itprog-project-production.up.railway.app/menu.php?vendor=" . $vendorID;
 $qrCode = new QrCode($url);
 $writer = new PngWriter();
 $result = $writer->write($qrCode);
