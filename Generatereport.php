@@ -8,7 +8,7 @@ session_start();
 if (!isset($_SESSION) && !isset($_SESSION["vendor_id"])) {
     header("Location: ./access_denied.php");
 }
-
+$vendorID = $_SESSION["vendor_id"];
 /* ============================
    RESOLVE DATE RANGE
 ============================ */

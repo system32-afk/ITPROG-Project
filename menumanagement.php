@@ -26,7 +26,7 @@ $stmt = $conn->prepare(
      ORDER BY item_id DESC
      LIMIT ? OFFSET ?"
 );
-$stmt->bind_param("iii", $vendorId, $perPage, $offset);
+$stmt->bind_param("iii", $vendorID, $perPage, $offset);
 $stmt->execute();
 $menuItems = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 

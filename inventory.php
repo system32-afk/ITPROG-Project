@@ -15,7 +15,7 @@ $stmt = $conn->prepare(
     WHERE vendor_id = ?
     ORDER BY item_name ASC"
 );
-$stmt->bind_param("i", $vendorId);
+$stmt->bind_param("i", $vendorID);
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -49,7 +49,7 @@ while ($row = $result->fetch_assoc()) {
     $inventoryItems[] = $row;
 }
 
-$vendorID = $_SESSION["vendor_id"];
+
 $getVendorInfo = $conn->prepare("SELECT store_name FROM vendor_tbl WHERE vendor_id = ?");
 $getVendorInfo->bind_param("i", $vendorID);
 $getVendorInfo->execute();
