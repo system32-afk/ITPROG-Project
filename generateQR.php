@@ -1,20 +1,26 @@
-<?php 
+<?php
 
 require "vendor/autoload.php";
 require_once "database.php";
 require "vendor/setasign/fpdf/fpdf.php";
+
+//check if user has loggedin
+if (!isset($_SESSION) && !isset($_SESSION["vendor_id"])) {
+    header("Location: ./access_denied.php");
+}
+
 $vendorID = $_GET['id'];
 $getVendorInfo = $conn->prepare("SELECT store_name FROM vendor_tbl WHERE vendor_id = ?");
-$getVendorInfo -> bind_param("i",$vendorID);
-$getVendorInfo -> execute();
-$vendorResult = $getVendorInfo -> get_result();
-$vendorInfo = $vendorResult -> fetch_assoc();
+$getVendorInfo->bind_param("i", $vendorID);
+$getVendorInfo->execute();
+$vendorResult = $getVendorInfo->get_result();
+$vendorInfo = $vendorResult->fetch_assoc();
 
 
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
 
-$url = "http://192.168.1.23/ITPROG-Project/menu.php?vendor=".$vendorID;
+$url = "http://192.168.1.23/ITPROG-Project/menu.php?vendor=" . $vendorID;
 $qrCode = new QrCode($url);
 $writer = new PngWriter();
 $result = $writer->write($qrCode);
@@ -24,13 +30,13 @@ $result->saveToFile($tempQR);
 
 
 
-if(isset($_GET['download'])){
-    
+if (isset($_GET['download'])) {
+
     $pdf = new FPDF();
     $pdf->SetTextColor(50, 114, 253);
     $pdf->AddPage();
 
-    $pdf->SetFont('Arial','B',22);
+    $pdf->SetFont('Arial', 'B', 22);
 
     $pdf->Cell(
         0,
@@ -41,7 +47,7 @@ if(isset($_GET['download'])){
         'C'
     );
 
-    $pdf->SetFont('Arial','B',18);
+    $pdf->SetFont('Arial', 'B', 18);
 
     $pdf->Cell(
         0,
@@ -61,7 +67,7 @@ if(isset($_GET['download'])){
 
     $pdf->Ln(110);
 
-    $pdf->SetFont('Arial','',13);
+    $pdf->SetFont('Arial', '', 13);
 
     $pdf->Cell(
         0,
@@ -72,7 +78,7 @@ if(isset($_GET['download'])){
         'C'
     );
 
-    $pdf->SetFont('Arial','I',10);
+    $pdf->SetFont('Arial', 'I', 10);
 
     $pdf->Cell(
         0,
@@ -84,11 +90,11 @@ if(isset($_GET['download'])){
     );
 
     $pdf->Output(
-    'D',
-    'RestaurantQR.pdf'
+        'D',
+        'RestaurantQR.pdf'
     );
 
-    if(file_exists($tempQR)){
+    if (file_exists($tempQR)) {
         unlink($tempQR);
     }
 
@@ -97,6 +103,6 @@ if(isset($_GET['download'])){
 
 
 // only output QR image when NOT downloading
-header('Content-Type: '.$result->getMimeType());
+header('Content-Type: ' . $result->getMimeType());
 echo $result->getString();
 ?>
