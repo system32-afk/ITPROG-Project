@@ -1,8 +1,13 @@
 <?php
 require_once "database.php";
 
-// TODO: swap for $_SESSION['vendor_id'] once login/auth is wired up.
-$vendorId = $_SESSION['vendor_id'];
+session_start();
+//check if user has loggedin
+if (!isset($_SESSION)) {
+    header("Location: ./login.php");
+}
+
+$vendorID = $_SESSION["vendor_id"];
 
 $stmt = $conn->prepare(
     "SELECT order_id, customer_name, customer_contact, payment_method, status, target_minutes, created_at
@@ -59,7 +64,7 @@ $activeOrdersCount = count($liveOrders);
 
 //get store data
 
-$vendorID = 1;
+
 
 $getVendorInfo = $conn->prepare("SELECT store_name FROM vendor_tbl WHERE vendor_id = ?");
 $getVendorInfo->bind_param("i", $vendorID);
