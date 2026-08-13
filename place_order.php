@@ -44,7 +44,7 @@ try {
     ");
 
     $insertToOrdersTBL->bind_param(
-        "issssssdss",
+        "ississsdss",
         $vendorID,
         $orderNumber,
         $orderType,
