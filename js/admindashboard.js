@@ -84,7 +84,7 @@ function renderRecentOrders(orders) {
 
         const statusCell = document.createElement("td");
         const badge = document.createElement("span");
-        badge.className = `status ${order.status.toLowerCase()}`;
+        badge.className = `status ${order.statusSlug}`;
         badge.textContent = order.status;
         statusCell.appendChild(badge);
 

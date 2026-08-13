@@ -2,7 +2,7 @@
 require_once "database.php";
 
 // TODO: swap for $_SESSION['vendor_id'] once login/auth is wired up.
-$vendorId = 1;
+$vendorId = $_SESSION['vendor_id'];
 
 $perPage = 4;
 $currentPage = max(1, (int)($_GET['page'] ?? 1));
@@ -85,7 +85,7 @@ $menuItems = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
     <div class="sidebar-footer">
 
-        <a href="#">
+        <a href="reports.php">
             <i class="fa-solid fa-chart-pie"></i>
             Reports
         </a>
@@ -188,7 +188,7 @@ $menuItems = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Price ($)</label>
+                    <label>Price (₱)</label>
                     <input type="number" step="0.01" id="addItemPrice" placeholder="0.00" required>
                 </div>
                 <div class="form-group">
@@ -243,7 +243,7 @@ $menuItems = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Price ($)</label>
+                    <label>Price (₱)</label>
                     <input type="number" step="0.01" id="editItemPrice" required>
                 </div>
                 <div class="form-group">
@@ -314,7 +314,7 @@ $menuItems = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
                     <!-- Price -->
                     <td>
-                        <span class="item-price">$<?= number_format((float)$item['price'], 2) ?></span>
+                        <span class="item-price">₱<?= number_format((float)$item['price'], 2) ?></span>
                     </td>
 
                     <!-- Toggle -->

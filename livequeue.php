@@ -2,7 +2,7 @@
 require_once "database.php";
 
 // TODO: swap for $_SESSION['vendor_id'] once login/auth is wired up.
-$vendorId = 1;
+$vendorId = $_SESSION['vendor_id'];
 
 $stmt = $conn->prepare(
     "SELECT order_id, customer_name, customer_contact, payment_method, status, target_minutes, created_at
@@ -128,7 +128,7 @@ $vendorInfo = $vendorResult->fetch_assoc();
 
         <div class="sidebar-footer">
 
-            <a href="#">
+            <a href="reports.php">
                 <i class="fa-solid fa-chart-pie"></i>
                 Reports
             </a>

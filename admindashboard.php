@@ -3,9 +3,17 @@ require_once "database.php";
 require_once "dashboard_data.php";
 
 //check if user has loggedin
+<<<<<<< Updated upstream
 if (!isset($_SESSION) && !isset($_SESSION["vendor_id"])) {
     header("Location: ./login.php");
 }
+=======
+if(!isset($_SESSION[''])&&!isset($_SESSION["vendor_id"])){
+    header("Location: ./login.php");
+}
+
+$vendorID = $_SESSION["vendor_id"];
+>>>>>>> Stashed changes
 
 $vendorID = $_SESSION["vendor_id"];
 $getVendorInfo = $conn->prepare("SELECT store_name FROM vendor_tbl WHERE vendor_id = ?");
@@ -43,6 +51,52 @@ $inventoryAlerts = getInventoryAlerts($conn, $vendorID);
         <div class="logo">
             <h2><?php echo htmlspecialchars($vendorInfo["store_name"]); ?></h2>
 
+<<<<<<< Updated upstream
+=======
+    </div>
+
+    <ul class="menu">
+        <li>
+           <a href="admindashboard.php" class="active">
+            <i class="fa-solid fa-chart-line"></i>
+            Dashboard</a>
+        </li>
+        <li>
+            <a href="livequeue.php">
+            <i class="fa-solid fa-utensils"></i>
+            Live Queue</a>
+        </li>
+        <li>
+            <a href="inventory.php">
+            <i class="fa-solid fa-box"></i>
+            Inventory</a>
+        </li>
+        <li>
+            <a href="menumanagement.php">
+            <i class="fa-solid fa-clipboard-list"> </i>
+            Menu Management</a>
+        </li>
+    </ul>
+
+    <div class="sidebar-footer">
+        <a href="reports.php">
+            <i class="fa-solid fa-chart-pie"></i>
+            Reports</a>
+        <a href="#">
+            <i class="fa-solid fa-question-circle"></i>
+            Help</a>
+    </div>
+
+</div>
+
+<div class="main">
+
+    <div class="topbar">
+
+        <div class="search-container">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="searchInput" placeholder="Search orders...">
+>>>>>>> Stashed changes
         </div>
 
         <ul class="menu">
@@ -103,6 +157,47 @@ $inventoryAlerts = getInventoryAlerts($conn, $vendorID);
                 <div class="profile-circle" onclick="window.location='profile.php'">
                     A
                 </div>
+<<<<<<< Updated upstream
+=======
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="ordersTable">
+
+                    <?php if (empty($recentOrders)): ?>
+                        <tr>
+                            <td colspan="3">No orders yet.</td>
+                        </tr>
+                    <?php endif; ?>
+
+                    <?php foreach ($recentOrders as $order): ?>
+
+                        <tr onclick="window.location='vieworder.php?id=<?php echo $order['id']; ?>'">
+                            <td><?php echo htmlspecialchars($order['id']); ?></td>
+                            <td><?php echo htmlspecialchars($order['customer']); ?></td>
+
+                            <td>
+                                <span class="status <?php echo htmlspecialchars($order['statusSlug']); ?>">
+                                    <?php echo htmlspecialchars($order['status']); ?>
+                                </span>
+                            </td>
+                        </tr>
+
+                    <?php endforeach; ?>
+
+                    </tbody>
+
+                </table>
+
+>>>>>>> Stashed changes
             </div>
 
         </div>

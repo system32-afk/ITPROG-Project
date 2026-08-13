@@ -2,7 +2,7 @@
 require_once "database.php";
 
 // swap for $_SESSION['vendor_id'] once login/auth is wired up.
-$vendorId = 1;
+$vendorId = $_SESSION['vendor_id'];
 
 $stmt = $conn->prepare(
     "SELECT inventory_id, item_name, unit, qty_on_hand, reorder_threshold, expiry_date, is_perishable
@@ -71,7 +71,7 @@ while ($row = $result->fetch_assoc()) {
 </ul>
 
 <div class="sidebar-footer">
-<a href="#"><i class="fa-solid fa-chart-pie"></i> Reports</a>
+<a href="reports.php"><i class="fa-solid fa-chart-pie"></i> Reports</a>
 <a href="#"><i class="fa-solid fa-circle-question"></i> Help</a>
 </div>
 </div>
