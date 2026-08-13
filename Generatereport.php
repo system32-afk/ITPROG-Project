@@ -4,7 +4,7 @@ require_once "database.php";
 
 session_start();
 
-// 1. Corrected session check
+
 if (!isset($_SESSION["vendor_id"])) {
     header("Location: ./access_denied.php");
     exit();
