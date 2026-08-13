@@ -3,6 +3,12 @@
 require "vendor/autoload.php";
 require_once "database.php";
 require "vendor/setasign/fpdf/fpdf.php";
+session_start();
+//check if user has loggedin
+if (!isset($_SESSION) && !isset($_SESSION["vendor_id"])) {
+    header("Location: ./access_denied.php");
+}
+
 $vendorID = $_GET['id'];
 $getVendorInfo = $conn->prepare("SELECT store_name FROM vendor_tbl WHERE vendor_id = ?");
 $getVendorInfo->bind_param("i", $vendorID);

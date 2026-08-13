@@ -2,7 +2,7 @@
 require_once __DIR__ . "/../database.php";
 
 header('Content-Type: application/json');
-
+session_start();
 /* ============================
    VALID OPTIONS
    Kept server-side too, not just in the <select> markup, so a
@@ -14,7 +14,7 @@ const VALID_STATIONS = ['GRILL', 'FRYER', 'COLD', 'PREP'];
 
 // swap for $_SESSION['vendor_id'] once login/auth is wired up.
 // Hardcoded to match the pattern already used in admindashboard.php / inventory_api.php.
-$vendorId = 1;
+$vendorId = $_SESSION['vendor_id'];
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
@@ -45,14 +45,14 @@ switch ($action) {
 
 function listMenuItems(mysqli $conn, int $vendorId): void
 {
-    $page = max(1, (int)($_GET['page'] ?? 1));
+    $page = max(1, (int) ($_GET['page'] ?? 1));
     $perPage = 4;
     $offset = ($page - 1) * $perPage;
 
     $countStmt = $conn->prepare("SELECT COUNT(*) AS total FROM menuitems_tbl WHERE vendor_id = ?");
     $countStmt->bind_param("i", $vendorId);
     $countStmt->execute();
-    $total = (int)$countStmt->get_result()->fetch_assoc()['total'];
+    $total = (int) $countStmt->get_result()->fetch_assoc()['total'];
 
     $stmt = $conn->prepare(
         "SELECT item_id, name, category, price, description, image_url, station, is_enabled
@@ -75,7 +75,7 @@ function listMenuItems(mysqli $conn, int $vendorId): void
         "page" => $page,
         "per_page" => $perPage,
         "total_items" => $total,
-        "total_pages" => max(1, (int)ceil($total / $perPage)),
+        "total_pages" => max(1, (int) ceil($total / $perPage)),
     ]);
 }
 
@@ -91,7 +91,7 @@ function validateMenuInput(array $data): ?string
     if (!in_array($data['category'] ?? '', VALID_CATEGORIES, true)) {
         return "Please select a valid category.";
     }
-    if (!is_numeric($data['price'] ?? null) || (float)$data['price'] < 0) {
+    if (!is_numeric($data['price'] ?? null) || (float) $data['price'] < 0) {
         return "Please enter a valid price.";
     }
     if (!empty($data['station']) && !in_array($data['station'], VALID_STATIONS, true)) {
@@ -115,7 +115,7 @@ function addMenuItem(mysqli $conn, int $vendorId): void
 
     $name = trim($_POST['name']);
     $category = $_POST['category'];
-    $price = (float)$_POST['price'];
+    $price = (float) $_POST['price'];
     $description = trim($_POST['description'] ?? '');
     $imageUrl = trim($_POST['image_url'] ?? '');
     $station = !empty($_POST['station']) ? $_POST['station'] : null;
@@ -136,7 +136,7 @@ function addMenuItem(mysqli $conn, int $vendorId): void
 
 function updateMenuItem(mysqli $conn, int $vendorId): void
 {
-    $id = (int)($_POST['item_id'] ?? 0);
+    $id = (int) ($_POST['item_id'] ?? 0);
     if (!$id) {
         http_response_code(422);
         echo json_encode(["error" => "Missing item_id."]);
@@ -152,7 +152,7 @@ function updateMenuItem(mysqli $conn, int $vendorId): void
 
     $name = trim($_POST['name']);
     $category = $_POST['category'];
-    $price = (float)$_POST['price'];
+    $price = (float) $_POST['price'];
     $description = trim($_POST['description'] ?? '');
     $imageUrl = trim($_POST['image_url'] ?? '');
     $station = !empty($_POST['station']) ? $_POST['station'] : null;
@@ -180,7 +180,7 @@ function updateMenuItem(mysqli $conn, int $vendorId): void
 
 function deleteMenuItem(mysqli $conn, int $vendorId): void
 {
-    $id = (int)($_POST['item_id'] ?? 0);
+    $id = (int) ($_POST['item_id'] ?? 0);
     if (!$id) {
         http_response_code(422);
         echo json_encode(["error" => "Missing item_id."]);
@@ -200,8 +200,8 @@ function deleteMenuItem(mysqli $conn, int $vendorId): void
 
 function toggleMenuItem(mysqli $conn, int $vendorId): void
 {
-    $id = (int)($_POST['item_id'] ?? 0);
-    $enabled = isset($_POST['enabled']) ? (int)$_POST['enabled'] : null;
+    $id = (int) ($_POST['item_id'] ?? 0);
+    $enabled = isset($_POST['enabled']) ? (int) $_POST['enabled'] : null;
 
     if (!$id || $enabled === null) {
         http_response_code(422);
@@ -219,5 +219,5 @@ function toggleMenuItem(mysqli $conn, int $vendorId): void
         return;
     }
 
-    echo json_encode(["success" => true, "is_enabled" => (bool)$enabled]);
+    echo json_encode(["success" => true, "is_enabled" => (bool) $enabled]);
 }

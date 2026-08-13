@@ -18,8 +18,9 @@ function getDashboardStats(mysqli $conn, int $vendorId): array
     // typically taken at order time (GCash) or on pickup (Cash) regardless
     // of whether the kitchen has finished preparing it yet.
     $revenueTodayStmt = $conn->prepare(
-        "SELECT COALESCE(SUM(oi.quantity * oi.price), 0) AS revenue
+        "SELECT COALESCE(SUM(oi.quantity * m.price), 0) AS revenue
          FROM orderitems_tbl oi
+         JOIN menuitems_tbl m ON oi.item_id = m.item_id
          JOIN orders_tbl o ON oi.order_id = o.order_id
          WHERE o.vendor_id = ? AND DATE(o.created_at) = CURDATE() AND o.status != 'canceled'"
     );
@@ -69,8 +70,9 @@ function getRecentOrders(mysqli $conn, int $vendorId, int $limit = 5): array
         $displayStatus = ucfirst($order['status']);
 
         // Only orders still in the queue can be "Delayed" -- done/cancelled
-        // orders keep their final status as-is.
-        if (!in_array($order['status'], ['done', 'canceled'], true)) {
+        // orders keep their final status as-is. Compare lowercased since the
+        // DB enum stores 'Done'/'Canceled' (capitalized).
+        if (!in_array(strtolower($order['status']), ['done', 'canceled'], true)) {
             $elapsedMinutes = max(0, (int) floor(($now - strtotime($order['created_at'])) / 60));
             if ($elapsedMinutes - (int) $order['target_minutes'] > 0) {
                 $displayStatus = "Delayed";
@@ -81,6 +83,9 @@ function getRecentOrders(mysqli $conn, int $vendorId, int $limit = 5): array
             "id" => str_pad($order['order_id'], 3, "0", STR_PAD_LEFT),
             "customer" => $order['customer_name'],
             "status" => $displayStatus,
+            // Hyphenated, lowercase version for use as a CSS class -- plain
+            // strtolower() breaks on multi-word statuses like "Awaiting Payment".
+            "statusSlug" => strtolower(str_replace(' ', '-', $displayStatus)),
         ];
     }
 
