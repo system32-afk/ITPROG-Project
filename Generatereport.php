@@ -3,10 +3,11 @@
 require "vendor/autoload.php";
 require_once "database.php";
 require "vendor/setasign/fpdf/fpdf.php";
-
-// swap for $_SESSION['vendor_id'] once login/auth is wired up.
-// Hardcoded to match the pattern already used across the admin pages.
-$vendorID = 1;
+session_start();
+//check if user has loggedin
+if (!isset($_SESSION) && !isset($_SESSION["vendor_id"])) {
+    header("Location: ./access_denied.php");
+}
 
 /* ============================
    RESOLVE DATE RANGE
