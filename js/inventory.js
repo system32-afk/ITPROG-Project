@@ -20,6 +20,7 @@ const tableBody = document.querySelector("#inventoryTable tbody");
 const historyTableBody = document.getElementById("historyTableBody");
 
 const searchInput = document.getElementById("inventorySearch");
+const sortSelect = document.getElementById("sortSelect");
 
 const nonPerishable = document.getElementById("nonPerishable");
 const expiryInput = document.getElementById("addExpiry");
@@ -145,6 +146,58 @@ searchInput.addEventListener("keyup", function () {
 });
 
 /* ============================
+   SORT
+============================ */
+
+const STATUS_RANK = { out: 0, low: 1, good: 2 };
+
+function getSortValue(row, field) {
+    switch (field) {
+        case "name":
+            return (row.dataset.name || "").toLowerCase();
+        case "qty":
+            return parseFloat(row.dataset.qty) || 0;
+        case "status":
+            return STATUS_RANK[row.dataset.status] ?? 3;
+        case "expiry":
+            return row.dataset.expiry || "";
+        case "updated":
+            return row.dataset.updated || "";
+        default:
+            return "";
+    }
+}
+
+function sortTable(sortValue) {
+    if (!sortValue) return;
+
+    const [field, direction] = sortValue.split("-");
+    const rows = Array.from(tableBody.querySelectorAll("tr"));
+
+    rows.sort((a, b) => {
+        const valA = getSortValue(a, field);
+        const valB = getSortValue(b, field);
+
+        // Items with no expiry date always sort to the bottom, regardless of direction.
+        if (field === "expiry") {
+            if (valA === "" && valB === "") return 0;
+            if (valA === "") return 1;
+            if (valB === "") return -1;
+        }
+
+        if (valA < valB) return direction === "desc" ? 1 : -1;
+        if (valA > valB) return direction === "desc" ? -1 : 1;
+        return 0;
+    });
+
+    rows.forEach((row) => tableBody.appendChild(row));
+}
+
+sortSelect.addEventListener("change", function () {
+    sortTable(this.value);
+});
+
+/* ============================
    SAVE (ADD) ITEM
 ============================ */
 
@@ -180,6 +233,11 @@ saveItemBtn.addEventListener("click", async function () {
         const row = document.createElement("tr");
         row.dataset.id = data.inventory_id;
         row.dataset.perishable = isPerishable ? "1" : "0";
+        row.dataset.name = name;
+        row.dataset.qty = stock;
+        row.dataset.status = data.status_class;
+        row.dataset.expiry = isPerishable ? expiry : "";
+        row.dataset.updated = data.last_updated || "";
 
         row.innerHTML = `
             <td>${name}</td>
@@ -204,6 +262,7 @@ saveItemBtn.addEventListener("click", async function () {
         expiryInput.disabled = false;
 
         bumpStats("good", data.status_class);
+        sortTable(sortSelect.value);
         closeAllModals();
         alert("Inventory item added successfully!");
     } catch (err) {
@@ -315,11 +374,18 @@ updateItemBtn.addEventListener("click", async function () {
         selectedRow.cells[2].textContent = unit;
         selectedRow.cells[3].innerHTML = statusBadge(data.status, data.status_class);
 
+        selectedRow.dataset.name = name;
+        selectedRow.dataset.qty = stock;
+        selectedRow.dataset.status = data.status_class;
+        selectedRow.dataset.updated = data.last_updated || selectedRow.dataset.updated;
+
         if (expiry !== "") {
             selectedRow.cells[4].textContent = formatExpiry(expiry);
+            selectedRow.dataset.expiry = expiry;
         }
 
         bumpStats(prevClass, data.status_class);
+        sortTable(sortSelect.value);
         closeAllModals();
         selectedRow = null;
         alert("Inventory updated successfully!");

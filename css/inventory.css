@@ -157,6 +157,40 @@ th{
     align-items:center;
 }
 
+.sort-container{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.sort-label{
+    font-size:13px;
+    color:var(--muted);
+    white-space:nowrap;
+}
+
+.sort-container select{
+    padding:10px 14px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:#fff;
+    color:var(--text);
+    font-family:inherit;
+    font-size:14px;
+    outline:none;
+    cursor:pointer;
+}
+
+.sort-container select:focus{
+    border-color:var(--primary);
+}
+
+@media(max-width:900px){
+    .sort-label{
+        display:none;
+    }
+}
+
 .new-order-btn{
     border:none;
     background:var(--primary);
@@ -288,6 +322,68 @@ tbody tr:hover{
 
 .table-btn.delete:hover{
     background:#FECACA;
+}
+
+.table-footer{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:16px;
+    border-top:1px solid var(--border);
+    background:#F8FAFF;
+}
+
+.showing-text{
+    font-size:13px;
+    color:var(--muted);
+}
+
+.pagination{
+    display:flex;
+    align-items:center;
+    gap:6px;
+}
+
+.page-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:32px;
+    height:32px;
+    padding:0 8px;
+    border-radius:8px;
+    text-decoration:none;
+    font-size:13px;
+    font-weight:600;
+    color:var(--text);
+    background:#fff;
+    border:1px solid var(--border);
+    transition:.2s;
+}
+
+.page-btn:hover{
+    border-color:var(--secondary);
+    color:var(--neutral);
+}
+
+.page-btn.active{
+    background:var(--secondary);
+    border-color:var(--secondary);
+    color:#fff;
+}
+
+.page-ellipsis{
+    color:var(--muted);
+    font-size:13px;
+    padding:0 4px;
+}
+
+@media(max-width:600px){
+    .table-footer{
+        flex-direction:column;
+        gap:12px;
+        align-items:flex-start;
+    }
 }
 
 @media(max-width:900px){

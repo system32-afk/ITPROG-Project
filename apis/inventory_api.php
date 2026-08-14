@@ -68,7 +68,7 @@ function logHistory(mysqli $conn, int $inventoryId, int $vendorId, string $actio
 function listInventory(mysqli $conn, int $vendorId): void
 {
     $stmt = $conn->prepare(
-        "SELECT inventory_id, item_name, unit, qty_on_hand, reorder_threshold, expiry_date, is_perishable
+        "SELECT inventory_id, item_name, unit, qty_on_hand, reorder_threshold, expiry_date, is_perishable, last_updated
          FROM inventory
          WHERE vendor_id = ?
          ORDER BY item_name ASC"
@@ -138,11 +138,14 @@ function addInventory(mysqli $conn, int $vendorId): void
 
     $statusInfo = computeStatus((float) $stock, (float) $threshold);
 
+    $updatedRow = $conn->query("SELECT last_updated FROM inventory WHERE inventory_id = " . (int) $newId)->fetch_assoc();
+
     echo json_encode([
         "success" => true,
         "inventory_id" => $newId,
         "status" => $statusInfo['status'],
         "status_class" => $statusInfo['class'],
+        "last_updated" => $updatedRow['last_updated'],
     ]);
 }
 
@@ -208,10 +211,13 @@ function updateInventory(mysqli $conn, int $vendorId): void
 
     $statusInfo = computeStatus((float) $stock, (float) $threshold);
 
+    $updatedRow = $conn->query("SELECT last_updated FROM inventory WHERE inventory_id = " . (int) $id)->fetch_assoc();
+
     echo json_encode([
         "success" => true,
         "status" => $statusInfo['status'],
         "status_class" => $statusInfo['class'],
+        "last_updated" => $updatedRow['last_updated'],
     ]);
 }
 
