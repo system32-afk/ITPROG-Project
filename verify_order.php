@@ -3,6 +3,12 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 require_once "database.php";
 
 $data = json_decode(file_get_contents("php://input"), true);
+session_start();
+//check if user has loggedin
+if (!isset($_SESSION["vendor_id"])) {
+    header("Location: ./access_denied.php");
+    exit();
+}
 
 $orderId = $data['orderId'] ?? null;
 $verificationCode = $data['verificationCode'] ?? null;

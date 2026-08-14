@@ -55,10 +55,13 @@ const elements = {
 
     vendorID: document.getElementById("vendorID"),
 
-    verificationBtn: document.getElementById("verifyCashBtn")
+    verificationBtn: document.getElementById("verifyCashBtn"),
+
+    verificationTotal: document.getElementById("verificationTotal"),
+    successOrderTotal: document.getElementById("successOrderTotal")
 };
 
- let activeOrderID = null; //tracks customers recent order for veri
+
 
 
 
@@ -480,7 +483,8 @@ elements.orderType.addEventListener("change", () => {
     }
 
 });
-
+let activeOrderID = null; //tracks customers recent order for verification
+let realTotal = null // the real total from the backend. prevent manipulation from the front end
 elements.placeOrderBtn.addEventListener("click", () => {
 
    
@@ -512,7 +516,7 @@ elements.placeOrderBtn.addEventListener("click", () => {
 
         paymentMethod: elements.paymentMethod.value,
 
-        total: calculateTotal(),
+        
 
         items: state.cart
 
@@ -531,16 +535,16 @@ elements.placeOrderBtn.addEventListener("click", () => {
             state.cart = [];
             state.selectedItem = null;
             state.quantity = 1;
-
-
-            activeOrderId = data.orderId; 
             
+            
+            activeOrderId = data.orderId; 
+            realTotal = data.total;
 
             //if payment method is cash, open verification modal
             if (order.paymentMethod === "Cash") {
                 // Populate cash modal details
                 document.getElementById("cashOrderNumber").textContent = order.orderNumber;
-                document.getElementById("cashTotalAmount").textContent = `₱${order.total.toFixed(2)}`;
+                elements.verificationTotal.textContent = `₱${data.total.toFixed(2)}`;
                 document.getElementById("cashVerificationCode").value = "";
                 document.getElementById("cashCodeError").textContent = "";
 
@@ -559,7 +563,7 @@ elements.placeOrderBtn.addEventListener("click", () => {
    
 
 });
-
+ 
 elements.verificationBtn.addEventListener("click", ()=>{
     const codeInput = document.getElementById("cashVerificationCode");
     const errorSpan = document.getElementById("cashCodeError");
@@ -654,7 +658,7 @@ function completeOrderUI(orderNumber) {
 
     renderCart();
     updateBadges();
-    
+    elements.successOrderTotal.textContent = "₱ "+realTotal;
     elements.orderNumber.textContent = orderNumber;
     openModal(elements.successModal);
     closeModal(elements.checkoutModal);

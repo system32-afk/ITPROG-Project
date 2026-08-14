@@ -3,9 +3,11 @@ require_once "database.php";
 
 session_start();
 //check if user has loggedin
-if (!isset($_SESSION)) {
+if (!isset($_SESSION["vendor_id"])) {
     header("Location: ./login.php");
+    exit();
 }
+
 $vendorID = $_SESSION["vendor_id"];
 
 $getVendorInfo = $conn->prepare("SELECT store_name FROM vendor_tbl WHERE vendor_id = ?");
@@ -66,13 +68,13 @@ $vendorInfo = $vendorResult->fetch_assoc();
         </ul>
 
         <div class="sidebar-footer">
-            <a href="reports.php" class="active">
+            <a href="reports.php">
                 <i class="fa-solid fa-chart-pie"></i>
-                Reports
-            </a>
-            <a href="#">
-                <i class="fa-solid fa-circle-question"></i>
-                Help
+                Reports</a>
+
+            <a href="logout.php" class="logout-link">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                Logout
             </a>
         </div>
 

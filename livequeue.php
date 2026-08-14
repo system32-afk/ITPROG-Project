@@ -13,14 +13,20 @@ $vendorID = $_SESSION["vendor_id"];
 $getVendorInfo = $conn->prepare("SELECT store_name FROM vendor_tbl WHERE vendor_id = ?");
 $getVendorInfo->bind_param("i", $vendorID);
 $getVendorInfo->execute();
+
 $vendorResult = $getVendorInfo->get_result();
+
 $vendorInfo = $vendorResult->fetch_assoc();
+
 $stmt = $conn->prepare(
     "SELECT order_id, customer_name, customer_contact, payment_method, status, target_minutes, created_at
     FROM orders_tbl
     WHERE vendor_id = ? AND status NOT IN ('done','canceled')
     ORDER BY created_at ASC"
 );
+
+
+
 $stmt->bind_param("i", $vendorID);
 $stmt->execute();
 $orders = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -133,17 +139,14 @@ $activeOrdersCount = count($liveOrders);
         </ul>
 
         <div class="sidebar-footer">
-
             <a href="reports.php">
                 <i class="fa-solid fa-chart-pie"></i>
-                Reports
-            </a>
+                Reports</a>
 
-            <a href="#">
-                <i class="fa-solid fa-circle-question"></i>
-                Help
+            <a href="logout.php" class="logout-link">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                Logout
             </a>
-
         </div>
 
     </div>
