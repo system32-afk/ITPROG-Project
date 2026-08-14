@@ -403,12 +403,37 @@ th{
     color:white;
 }
 
+.item-price{
+    color:var(--muted);
+    font-size:13px;
+    font-family:'JetBrains Mono',monospace;
+    white-space:nowrap;
+}
+
 .item-station{
     margin-left:auto;
     color:#64748B;
     font-size:11px;
     font-family:'JetBrains Mono',monospace;
     text-transform:uppercase;
+}
+
+.order-total{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:12px;
+    padding-top:12px;
+    border-top:1px solid var(--border);
+    font-weight:600;
+    color:var(--text);
+    font-size:14px;
+}
+
+.order-total-amount{
+    font-family:'JetBrains Mono',monospace;
+    color:var(--neutral);
+    font-size:16px;
 }
 
 .priority-btn{

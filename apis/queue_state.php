@@ -60,12 +60,17 @@ foreach ($orders as $order) {
         "target_display"    => $order['target_minutes'] . "m",
         "overrun_display"   => "Exceeded by " . $overrunMinutes . "m",
         "quantity_total"    => array_sum(array_column($items, 'quantity')),
+        "order_total"       => array_sum(array_map(
+            fn($item) => (float) $item['price'] * (int) $item['quantity'],
+            $items
+        )),
         "verification_code" => $items[0]['verification_code'] ?? null,
         "items" => array_map(function ($item) {
             return [
                 "quantity" => (int) $item['quantity'],
                 "name"     => $item['name'],
                 "station"  => $item['station'],
+                "price"    => (float) $item['price'],
             ];
         }, $items),
     ];

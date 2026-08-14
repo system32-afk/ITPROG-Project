@@ -69,9 +69,17 @@ function buildOrderCardEl(order) {
         <div class="order-item">
             <span class="item-qty">${item.quantity}x</span>
             <span class="item-name">${escapeHtml(item.name)}</span>
+            <span class="item-price">₱${(item.price * item.quantity).toFixed(2)}</span>
             <span class="item-station">${escapeHtml(item.station || "")}</span>
         </div>
     `).join("");
+
+    const orderTotalHtml = `
+        <div class="order-total">
+            <span>Total</span>
+            <span class="order-total-amount">₱${Number(order.order_total).toFixed(2)}</span>
+        </div>
+    `;
 
     const verifyHtml = (order.payment_method === "Cash" && order.status === "Awaiting Payment")
         ? `
@@ -92,6 +100,7 @@ function buildOrderCardEl(order) {
             <p class="order-time">${escapeHtml(order.elapsed_display)} ${timeExtra}</p>
             <hr>
             ${itemsHtml}
+            ${orderTotalHtml}
         </div>
         <div class="order-actions">
             <button class="done-btn">Done</button>
