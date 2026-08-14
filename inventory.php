@@ -222,6 +222,7 @@ $vendorInfo = $vendorResult->fetch_assoc();
                             data-qty="<?= htmlspecialchars($item['qty_on_hand']) ?>"
                             data-status="<?= htmlspecialchars($item['status_class']) ?>"
                             data-expiry="<?= $item['expiry_date'] ? htmlspecialchars($item['expiry_date']) : '' ?>"
+                            data-threshold="<?= htmlspecialchars($item['reorder_threshold']) ?>"
                             data-updated="<?= htmlspecialchars($item['last_updated']) ?>">
 
                             <td><?= htmlspecialchars($item["item_name"]) ?></td>
@@ -383,6 +384,11 @@ $vendorInfo = $vendorResult->fetch_assoc();
 
                 </div>
 
+                <div class="checkbox-group">
+                    <input type="checkbox" id="editNonPerishable">
+                    <label for="editNonPerishable">Non-perishable Food</label>
+                </div>
+
                 <div class="form-group">
                     <label>Reason for Change *</label>
                     <textarea id="changeReason" rows="3"></textarea>
@@ -423,7 +429,7 @@ $vendorInfo = $vendorResult->fetch_assoc();
                     </thead>
 
                     <tbody id="historyTableBody">
-                        <!-- populated by inventory.js via inventory_api.php?action=history -->
+
                     </tbody>
 
                 </table>

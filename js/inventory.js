@@ -25,6 +25,9 @@ const sortSelect = document.getElementById("sortSelect");
 const nonPerishable = document.getElementById("nonPerishable");
 const expiryInput = document.getElementById("addExpiry");
 
+const editNonPerishable = document.getElementById("editNonPerishable");
+const editExpiryInput = document.getElementById("editExpiry");
+
 const lowStockCount = document.getElementById("lowStockCount");
 const expiringSoonCount = document.getElementById("expiringSoonCount");
 
@@ -129,6 +132,13 @@ nonPerishable.addEventListener("change", function () {
     expiryInput.disabled = this.checked;
     if (this.checked) {
         expiryInput.value = "";
+    }
+});
+
+editNonPerishable.addEventListener("change", function () {
+    editExpiryInput.disabled = this.checked;
+    if (this.checked) {
+        editExpiryInput.value = "";
     }
 });
 
@@ -237,6 +247,7 @@ saveItemBtn.addEventListener("click", async function () {
         row.dataset.qty = stock;
         row.dataset.status = data.status_class;
         row.dataset.expiry = isPerishable ? expiry : "";
+        row.dataset.threshold = threshold || 0;
         row.dataset.updated = data.last_updated || "";
 
         row.innerHTML = `
@@ -319,9 +330,13 @@ tableBody.addEventListener("click", async function (e) {
         document.getElementById("editName").value = row.cells[0].textContent.trim();
         document.getElementById("editStock").value = row.cells[1].textContent.trim();
         document.getElementById("editUnit").value = row.cells[2].textContent.trim();
-        document.getElementById("editThreshold").value = "";
-        document.getElementById("editExpiry").value = "";
+        document.getElementById("editThreshold").value = row.dataset.threshold || "";
         document.getElementById("changeReason").value = "";
+
+        const isPerishable = row.dataset.perishable === "1";
+        editNonPerishable.checked = !isPerishable;
+        editExpiryInput.disabled = !isPerishable;
+        editExpiryInput.value = isPerishable ? (row.dataset.expiry || "") : "";
 
         editModal.style.display = "flex";
     }
@@ -341,7 +356,8 @@ updateItemBtn.addEventListener("click", async function () {
     const stock = document.getElementById("editStock").value;
     const unit = document.getElementById("editUnit").value.trim();
     const threshold = document.getElementById("editThreshold").value;
-    const expiry = document.getElementById("editExpiry").value;
+    const isPerishable = !editNonPerishable.checked;
+    const expiry = isPerishable ? document.getElementById("editExpiry").value : "";
     const reason = document.getElementById("changeReason").value.trim();
 
     if (!name || stock === "" || !reason) {
@@ -365,6 +381,7 @@ updateItemBtn.addEventListener("click", async function () {
                 threshold,
                 expiry,
                 reason,
+                is_perishable: isPerishable ? 1 : 0,
             },
             "POST"
         );
@@ -377,12 +394,12 @@ updateItemBtn.addEventListener("click", async function () {
         selectedRow.dataset.name = name;
         selectedRow.dataset.qty = stock;
         selectedRow.dataset.status = data.status_class;
+        selectedRow.dataset.threshold = threshold || 0;
+        selectedRow.dataset.perishable = isPerishable ? "1" : "0";
         selectedRow.dataset.updated = data.last_updated || selectedRow.dataset.updated;
 
-        if (expiry !== "") {
-            selectedRow.cells[4].textContent = formatExpiry(expiry);
-            selectedRow.dataset.expiry = expiry;
-        }
+        selectedRow.cells[4].textContent = isPerishable && expiry ? formatExpiry(expiry) : "-";
+        selectedRow.dataset.expiry = isPerishable ? expiry : "";
 
         bumpStats(prevClass, data.status_class);
         sortTable(sortSelect.value);
