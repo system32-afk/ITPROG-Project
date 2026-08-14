@@ -10,96 +10,92 @@ if (!isset($_SESSION["vendor_id"])) {
 
 
 $vendorID = $_SESSION["vendor_id"];
+
+$perPage = 5;
+$currentPage = max(1, (int) ($_GET['page'] ?? 1));
+
+$countStmt = $conn->prepare("SELECT COUNT(*) AS total FROM inventory WHERE vendor_id = ?");
+$countStmt->bind_param("i", $vendorID);
+$countStmt->execute();
+$totalItems = (int) $countStmt->get_result()->fetch_assoc()['total'];
+$totalPages = max(1, (int) ceil($totalItems / $perPage));
+$currentPage = min($currentPage, $totalPages);
+$offset = ($currentPage - 1) * $perPage;
+
+// Stats (Low Stock / Expiring Soon) are computed across ALL of the
+// vendor's inventory, not just the current page, so the cards stay accurate.
+$statsStmt = $conn->prepare(
+    "SELECT qty_on_hand, reorder_threshold, expiry_date FROM inventory WHERE vendor_id = ?"
+);
+$statsStmt->bind_param("i", $vendorID);
+$statsStmt->execute();
+$statsResult = $statsStmt->get_result();
+
+$lowStock = 0;
+$expiringSoon = 0;
+$thirtyDaysOut = strtotime("+30 days");
+
+while ($row = $statsResult->fetch_assoc()) {
+    if ($row["qty_on_hand"] <= $row["reorder_threshold"]) {
+        $lowStock++;
+    }
+    if ($row["expiry_date"] && strtotime($row["expiry_date"]) <= $thirtyDaysOut) {
+        $expiringSoon++;
+    }
+}
+
+$stmt = $conn->prepare(
+    "SELECT inventory_id, item_name, unit, qty_on_hand, reorder_threshold, expiry_date, is_perishable, last_updated
+    FROM inventory
+    WHERE vendor_id = ?
+    ORDER BY item_name ASC
+    LIMIT ? OFFSET ?"
+);
+$stmt->bind_param("iii", $vendorID, $perPage, $offset);
+$stmt->execute();
+$result = $stmt->get_result();
+
+$inventoryItems = [];
+
+while ($row = $result->fetch_assoc()) {
+    if ($row["qty_on_hand"] <= 0) {
+        $status = "Out of Stock";
+        $class = "out";
+    } elseif ($row["qty_on_hand"] <= $row["reorder_threshold"]) {
+        $status = "Low Stock";
+        $class = "low";
+    } else {
+        $status = "In Stock";
+        $class = "good";
+    }
+
+    $row["status"] = $status;
+    $row["status_class"] = $class;
+
+    $inventoryItems[] = $row;
+}
+
+
 $getVendorInfo = $conn->prepare("SELECT store_name FROM vendor_tbl WHERE vendor_id = ?");
 $getVendorInfo->bind_param("i", $vendorID);
 $getVendorInfo->execute();
-
 $vendorResult = $getVendorInfo->get_result();
-
 $vendorInfo = $vendorResult->fetch_assoc();
-
-$stmt = $conn->prepare(
-    "SELECT order_id, customer_name, customer_contact, payment_method, status, target_minutes, created_at
-    FROM orders_tbl
-    WHERE vendor_id = ? AND status NOT IN ('done','canceled')
-    ORDER BY created_at ASC"
-);
-
-
-
-$stmt->bind_param("i", $vendorID);
-$stmt->execute();
-$orders = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-
-$itemStmt = $conn->prepare(
-    "SELECT oi.order_item_id, oi.item_id, oi.quantity, m.price, m.name, m.station, o.verification_code, o.status, o.order_number
-    FROM orderitems_tbl oi
-    JOIN menuitems_tbl m ON oi.item_id = m.item_id
-    JOIN orders_tbl o ON oi.order_id = o.order_id
-    WHERE oi.order_id = ?"
-);
-
-$liveOrders = [];
-$delayedCount = 0;
-$now = time();
-
-foreach ($orders as $order) {
-    $itemStmt->bind_param("i", $order['order_id']);
-    $itemStmt->execute();
-    $order['items'] = $itemStmt->get_result()->fetch_all(MYSQLI_ASSOC);
-
-    $createdTs = strtotime($order['created_at']);
-    $elapsedMinutes = max(0, (int) floor(($now - $createdTs) / 60));
-    $overrunMinutes = $elapsedMinutes - (int) $order['target_minutes'];
-    $isDelayed = $overrunMinutes > 0;
-
-    // "Delayed" overrides the display badge/class, but the real status
-    // column underneath (pending/priority/preparing) is left untouched --
-    // see orders_api.php for why it's computed instead of stored.
-    $order['display_status'] = $isDelayed ? "Delayed" : ucfirst($order['status']);
-    $order['elapsed_display'] = $elapsedMinutes . "m Ago";
-    $order['target_display'] = $order['target_minutes'] . "m";
-    $order['overrun_display'] = "Exceeded by " . $overrunMinutes . "m";
-    $order['quantity_total'] = array_sum(array_column($order['items'], 'quantity'));
-    $order['order_total'] = array_sum(array_map(
-        fn($item) => (float) $item['price'] * (int) $item['quantity'],
-        $order['items']
-    ));
-    $order['verification_code'] = $order['items'][0]['verification_code'] ?? null;
-    $order['status'] = $order['items'][0]['status'] ?? null;
-    $order['order_number'] = $order['items'][0]['order_number'] ?? null;
-    if ($isDelayed) {
-        $delayedCount++;
-    }
-
-    $liveOrders[] = $order;
-}
-
-$activeOrdersCount = count($liveOrders);
-
-
-//get store data
-
-
-
-
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pabili Live Queue</title>
+    <title>Inventory</title>
 
-    <link rel="stylesheet" href="css/livequeue.css">
-
+    <link rel="stylesheet" href="css/inventory.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link
-        href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap"
         rel="stylesheet">
+
 </head>
 
 <body>
@@ -108,38 +104,31 @@ $activeOrdersCount = count($liveOrders);
 
         <div class="logo">
             <h2><?php echo htmlspecialchars($vendorInfo["store_name"]); ?>
+            </h2>
+
         </div>
 
         <ul class="menu">
-
             <li>
                 <a href="admindashboard.php">
                     <i class="fa-solid fa-chart-line"></i>
-                    Dashboard
-                </a>
+                    Dashboard</a>
             </li>
-
             <li>
-                <a href="livequeue.php" class="active">
+                <a href="livequeue.php">
                     <i class="fa-solid fa-utensils"></i>
-                    Live Queue
-                </a>
+                    Live Queue</a>
             </li>
-
             <li>
-                <a href="inventory.php">
+                <a href="inventory.php" class="active">
                     <i class="fa-solid fa-box"></i>
-                    Inventory
-                </a>
+                    Inventory</a>
             </li>
-
             <li>
                 <a href="menumanagement.php">
-                    <i class="fa-solid fa-clipboard-list"></i>
-                    Menu Management
-                </a>
+                    <i class="fa-solid fa-clipboard-list"> </i>
+                    Menu Management</a>
             </li>
-
         </ul>
 
         <div class="sidebar-footer">
@@ -161,207 +150,295 @@ $activeOrdersCount = count($liveOrders);
 
             <div class="search-container">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="searchInput" placeholder="Search orders...">
+                <input type="text" id="inventorySearch" placeholder="Filter by ingredient name or SKU...">
             </div>
 
+            <div class="top-actions">
+                <div class="sort-container">
+                    <label for="sortSelect" class="sort-label">Sort by</label>
+                    <select id="sortSelect">
+                        <option value="">Default</option>
+                        <option value="name-asc">Name (A–Z)</option>
+                        <option value="name-desc">Name (Z–A)</option>
+                        <option value="qty-asc">Stock (Low–High)</option>
+                        <option value="qty-desc">Stock (High–Low)</option>
+                        <option value="status-asc">Status (Critical First)</option>
+                        <option value="expiry-asc">Expiry Date (Soonest)</option>
+                        <option value="expiry-desc">Expiry Date (Latest)</option>
+                        <option value="updated-desc">Latest Updated</option>
+                        <option value="updated-asc">Oldest Updated</option>
+                    </select>
+                </div>
+                <button class="new-order-btn" id="openAddModal">
+                    <i class="fa-solid fa-circle-plus"></i>
+                    Add New Stock
+                </button>
+            </div>
 
         </div>
+
+        <h1 class="page-title">Inventory Management</h1>
 
         <div class="stats">
 
             <div class="card">
-                <span class="card-label">
-                    Active Orders
-                </span>
-                <h2 class="active-orders-number"><?= $activeOrdersCount ?></h2>
+                <span class="card-label">Low Stock Items</span>
+                <h2 id="lowStockCount">
+                    <?php echo $lowStock; ?>
+                </h2>
             </div>
 
             <div class="card">
-                <span class="card-label">
-                    Currently Delayed
-                </span>
-                <h2 class="delayed-number">
-                    <?= $delayedCount ?>
+                <span class="card-label">Expiring Soon</span>
+                <h2 id="expiringSoonCount">
+                    <?php echo $expiringSoon; ?>
                 </h2>
             </div>
 
         </div>
 
-        <h1 class="page-title">
-            Live Queue
-        </h1>
+        <div class="panel">
 
-        <div class="queue-toolbar">
+            <table id="inventoryTable">
 
-            <button class="filter-btn">
-                <i class="fa-solid fa-filter"></i>
-                All Stations
-            </button>
+                <thead>
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Current Stock</th>
+                        <th>Unit</th>
+                        <th>Status</th>
+                        <th>Expiry Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
 
-            <select id="sortOrders" class="filter-btn">
+                <tbody>
 
-                <option value="">Sort By</option>
-                <option value="delayed">Delayed First</option>
-                <option value="quantity">Quantity Highest First</option>
-                <option value="newest">Newest First</option>
+                    <?php foreach ($inventoryItems as $item): ?>
 
-            </select>
+                        <tr data-id="<?= (int) $item['inventory_id'] ?>"
+                            data-perishable="<?= (int) $item['is_perishable'] ?>"
+                            data-name="<?= htmlspecialchars($item['item_name']) ?>"
+                            data-qty="<?= htmlspecialchars($item['qty_on_hand']) ?>"
+                            data-status="<?= htmlspecialchars($item['status_class']) ?>"
+                            data-expiry="<?= $item['expiry_date'] ? htmlspecialchars($item['expiry_date']) : '' ?>"
+                            data-updated="<?= htmlspecialchars($item['last_updated']) ?>">
 
-        </div>
+                            <td><?= htmlspecialchars($item["item_name"]) ?></td>
 
-        <div class="live-queue-container">
+                            <td><?= htmlspecialchars($item["qty_on_hand"]) ?></td>
 
-            <?php foreach ($liveOrders as $order): ?>
+                            <td><?= htmlspecialchars($item["unit"]) ?></td>
 
-                <div class="order-card <?php echo strtolower($order['display_status']); ?>"
-                    data-id="<?php echo $order['order_id']; ?>"
-                    data-status="<?php echo strtolower($order['display_status']); ?>"
-                    data-quantity="<?php echo $order['quantity_total']; ?>">
-
-                    <div class="order-header">
-
-                        <h3>
-                            <?= $order['order_number']; ?>
-                        </h3>
-
-                        <span class="order-status-badge <?php echo strtolower($order['display_status']); ?>">
-                            <?php echo htmlspecialchars($order['display_status']); ?>
-                        </span>
-
-                    </div>
-
-                    <div class="order-content">
-
-                        <p class="customer-name">
-                            <?php echo htmlspecialchars($order['customer_name']); ?>
-                        </p>
-
-                        <p class="order-time">
-
-                            <?php echo htmlspecialchars($order['elapsed_display']); ?>
-
-                            <?php if ($order['display_status'] === "Delayed"): ?>
-
-                                • <?php echo htmlspecialchars($order['overrun_display']); ?>
-
-                            <?php else: ?>
-
-                                • Target:
-                                <?php echo htmlspecialchars($order['target_display']); ?>
-
-                            <?php endif; ?>
-
-                        </p>
-
-                        <hr>
-
-                        <?php foreach ($order['items'] as $item): ?>
-
-                            <div class="order-item">
-
-                                <span class="item-qty">
-                                    <?php echo $item['quantity']; ?>x
+                            <td>
+                                <span class="inventory-status <?= htmlspecialchars($item["status_class"]) ?>">
+                                    <?= htmlspecialchars($item["status"]) ?>
                                 </span>
+                            </td>
 
-                                <span class="item-name">
-                                    <?php echo htmlspecialchars($item['name']); ?>
-                                </span>
+                            <td><?= $item["expiry_date"] ? date("M d, Y", strtotime($item["expiry_date"])) : "-" ?></td>
 
-                                <span class="item-price">
-                                    ₱<?php echo number_format((float) $item['price'] * (int) $item['quantity'], 2); ?>
-                                </span>
+                            <td>
 
-                                <span class="item-station">
-                                    <?php echo htmlspecialchars($item['station'] ?? ''); ?>
-                                </span>
+                                <button class="table-btn edit">Edit</button>
+                                <button class="table-btn history">History</button>
 
-                            </div>
+                            </td>
 
-                        <?php endforeach; ?>
+                        </tr>
 
-                        <div class="order-total">
-                            <span>Total</span>
-                            <span class="order-total-amount">₱<?php echo number_format($order['order_total'], 2); ?></span>
-                        </div>
+                    <?php endforeach; ?>
 
-                    </div>
+                </tbody>
 
-                    <div class="order-actions">
+            </table>
 
-                        <button class="done-btn">
-                            Done
-                        </button>
+            <div class="table-footer">
+                <span class="showing-text">
+                    Showing <?= $totalItems === 0 ? 0 : $offset + 1 ?>–<?= min($offset + $perPage, $totalItems) ?> of
+                    <?= $totalItems ?> Inventory Items
+                </span>
 
-                        <button class="cancel-btn">
-                            Cancel
-                        </button>
+                <div class="pagination">
+                    <?php for ($p = 1; $p <= min(3, $totalPages); $p++): ?>
+                        <a href="?page=<?= $p ?>" class="page-btn <?= $p === $currentPage ? 'active' : '' ?>"><?= $p ?></a>
+                    <?php endfor; ?>
 
-                    </div>
-
-                    <div class="order-actions">
-
-                        <button class="process-btn">
-                            Process
-                        </button>
-
-                        <button class="priority-btn">
-                            Set Priority
-                        </button>
-
-                    </div>
-
-                    <?php if ($order["payment_method"] === "Cash" && $order['status'] === "Awaiting Payment"): ?>
-
-                        <div class="order-actions">
-
-                            <button class="verify-btn" data-code="<?= htmlspecialchars($order['verification_code']); ?>">
-                                Generate Verification Code
-                            </button>
-
-                        </div>
-
+                    <?php if ($totalPages > 4): ?>
+                        <span class="page-ellipsis">...</span>
+                        <a href="?page=<?= $totalPages ?>"
+                            class="page-btn <?= $totalPages === $currentPage ? 'active' : '' ?>"><?= $totalPages ?></a>
+                    <?php elseif ($totalPages === 4): ?>
+                        <a href="?page=4" class="page-btn <?= $currentPage === 4 ? 'active' : '' ?>">4</a>
                     <?php endif; ?>
-
                 </div>
-            <?php endforeach; ?>
-
-            <div class="order-card empty-order-card">
-
-                <i class="fa-solid fa-plus"></i>
-
-                <p>
-                    New Orders will appear here
-                </p>
-
             </div>
 
         </div>
 
     </div>
-    <div id="verificationModal" class="modal">
+
+    <!-- ADD MODAL -->
+    <div class="modal" id="addInventoryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Inventory Item</h2>
+                <span class="close">&times;</span>
+            </div>
+
+            <div class="modal-body">
+
+                <h3>Ingredient Information</h3>
+
+                <div class="form-group">
+                    <label>Ingredient Name *</label>
+                    <input type="text" id="addName">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Unit</label>
+                        <input type="text" id="addUnit" placeholder="kg, g, pcs, L">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Quantity *</label>
+                        <input type="number" id="addQuantity">
+                    </div>
+                </div>
+
+                <div class="form-row">
+
+                    <div class="form-group">
+                        <label>Minimum Threshold</label>
+                        <input type="number" id="addThreshold">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Expiry Date</label>
+                        <input type="date" id="addExpiry">
+                    </div>
+
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="nonPerishable">
+                    <label for="nonPerishable">Non-perishable Food</label>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="table-btn">Cancel</button>
+                <button class="table-btn edit" id="saveItemBtn">
+                    Save Item
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- EDIT MODAL -->
+    <div class="modal" id="editInventoryModal">
 
         <div class="modal-content">
 
-            <h2>Verification Code</h2>
+            <div class="modal-header">
+                <h2>Edit Ingredient</h2>
+                <span class="close">&times;</span>
+            </div>
 
-            <h1 id="verificationCode">
+            <div class="modal-body">
 
-            </h1>
+                <div class="form-group">
+                    <label>Ingredient Name</label>
+                    <input type="text" id="editName">
+                </div>
 
-            <button id="copyCodeBtn" class="process-btn">
-                Copy Code
+                <div class="form-row">
 
-            </button>
+                    <div class="form-group">
+                        <label>Current Stock</label>
+                        <input type="number" id="editStock">
+                    </div>
 
-            <button id="closeModalBtn" class="cancel-btn">
-                Close
-            </button>
+                    <div class="form-group">
+                        <label>Unit</label>
+                        <input type="text" id="editUnit">
+                    </div>
+
+                </div>
+
+                <div class="form-row">
+
+                    <div class="form-group">
+                        <label>Minimum Threshold</label>
+                        <input type="number" id="editThreshold">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Expiry Date</label>
+                        <input type="date" id="editExpiry">
+                    </div>
+
+                </div>
+
+                <div class="form-group">
+                    <label>Reason for Change *</label>
+                    <textarea id="changeReason" rows="3"></textarea>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="table-btn">Cancel</button>
+                <button class="table-btn edit" id="updateItemBtn">
+                    Update Item
+                </button>
+            </div>
 
         </div>
 
     </div>
 
-    <script src="js/livequeue.js"></script>
+    <!-- HISTORY MODAL -->
+    <div class="modal" id="historyModal">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h2>Inventory Edit History</h2>
+                <span class="close">&times;</span>
+            </div>
+
+            <div class="modal-body">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Date &amp; Time</th>
+                            <th>Action</th>
+                            <th>Change</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="historyTableBody">
+                        <!-- populated by inventory.js via inventory_api.php?action=history -->
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="table-btn">Close</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="js/inventory.js"></script>
+
 </body>
 
 </html>

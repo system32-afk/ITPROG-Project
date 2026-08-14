@@ -40,6 +40,7 @@ const container = document.querySelector(".live-queue-container");
 const emptyCard = document.querySelector(".empty-order-card");
 const searchInput = document.getElementById("searchInput");
 const sortSelect = document.getElementById("sortOrders");
+const stationSelect = document.getElementById("stationFilter");
 const activeOrdersEl = document.querySelector(".active-orders-number");
 const delayedNumberEl = document.querySelector(".delayed-number");
 
@@ -60,6 +61,7 @@ function buildOrderCardEl(order) {
     card.dataset.id = order.order_id;
     card.dataset.status = statusClass;
     card.dataset.quantity = order.quantity_total;
+    card.dataset.stations = [...new Set(order.items.map(i => i.station).filter(Boolean))].join(",");
 
     const timeExtra = order.display_status === "Delayed"
         ? `\u2022 ${escapeHtml(order.overrun_display)}`
@@ -71,6 +73,7 @@ function buildOrderCardEl(order) {
             <span class="item-name">${escapeHtml(item.name)}</span>
             <span class="item-price">₱${(item.price * item.quantity).toFixed(2)}</span>
             <span class="item-station">${escapeHtml(item.station || "")}</span>
+            ${item.Instructions ? `<span class="item-notes">Note: ${escapeHtml(item.Instructions)}</span>` : ""}
         </div>
     `).join("");
 
@@ -97,6 +100,8 @@ function buildOrderCardEl(order) {
         </div>
         <div class="order-content">
             <p class="customer-name">${escapeHtml(order.customer_name)}</p>
+            <p class="customer-contact">${escapeHtml(order.customer_contact)}</p>
+            <p class="table-number">Table ${escapeHtml(order.table_number)}</p>
             <p class="order-time">${escapeHtml(order.elapsed_display)} ${timeExtra}</p>
             <hr>
             ${itemsHtml}
@@ -116,15 +121,29 @@ function buildOrderCardEl(order) {
     return card;
 }
 
+function cardMatchesFilters(card, searchFilter, stationFilter) {
+    if (stationFilter) {
+        const stations = (card.dataset.stations || "").split(",");
+        if (!stations.includes(stationFilter)) return false;
+    }
+
+    if (searchFilter && !card.textContent.toLowerCase().includes(searchFilter)) {
+        return false;
+    }
+
+    return true;
+}
+
 function renderOrders(orders) {
     container.querySelectorAll(".order-card:not(.empty-order-card)").forEach(card => card.remove());
 
     const searchFilter = searchInput ? searchInput.value.toLowerCase().trim() : "";
+    const stationFilter = stationSelect ? stationSelect.value : "";
 
     orders.forEach(order => {
         const card = buildOrderCardEl(order);
 
-        if (searchFilter && !card.textContent.toLowerCase().includes(searchFilter)) {
+        if (!cardMatchesFilters(card, searchFilter, stationFilter)) {
             card.style.display = "none";
         }
 
@@ -178,14 +197,36 @@ if (searchInput) {
     searchInput.addEventListener("keyup", function () {
 
         const filter = this.value.toLowerCase().trim();
+        const stationFilter = stationSelect ? stationSelect.value : "";
 
         container.querySelectorAll(".order-card").forEach(card => {
 
             if (card.classList.contains("empty-order-card")) return;
 
-            const text = card.textContent.toLowerCase();
+            card.style.display = cardMatchesFilters(card, filter, stationFilter) ? "" : "none";
 
-            card.style.display = text.includes(filter) ? "" : "none";
+        });
+
+    });
+
+}
+
+/* ============================
+   STATION FILTER
+============================ */
+
+if (stationSelect) {
+
+    stationSelect.addEventListener("change", function () {
+
+        const stationFilter = this.value;
+        const searchFilter = searchInput ? searchInput.value.toLowerCase().trim() : "";
+
+        container.querySelectorAll(".order-card").forEach(card => {
+
+            if (card.classList.contains("empty-order-card")) return;
+
+            card.style.display = cardMatchesFilters(card, searchFilter, stationFilter) ? "" : "none";
 
         });
 

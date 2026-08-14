@@ -8,7 +8,7 @@ if (!isset($_SESSION["vendor_id"])) {
     exit();
 }
 
-
+//get vendor info
 $vendorID = $_SESSION["vendor_id"];
 $getVendorInfo = $conn->prepare("SELECT store_name FROM vendor_tbl WHERE vendor_id = ?");
 $getVendorInfo->bind_param("i", $vendorID);
@@ -18,21 +18,20 @@ $vendorResult = $getVendorInfo->get_result();
 
 $vendorInfo = $vendorResult->fetch_assoc();
 
+
+//get orders
 $stmt = $conn->prepare(
-    "SELECT order_id, customer_name, customer_contact, payment_method, status, target_minutes, created_at
+    "SELECT order_id, customer_name, customer_contact, table_number, payment_method, status, target_minutes, created_at
     FROM orders_tbl
     WHERE vendor_id = ? AND status NOT IN ('done','canceled')
     ORDER BY created_at ASC"
 );
-
-
-
 $stmt->bind_param("i", $vendorID);
 $stmt->execute();
 $orders = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 $itemStmt = $conn->prepare(
-    "SELECT oi.order_item_id, oi.item_id, oi.quantity, m.price, m.name, m.station, o.verification_code, o.status, o.order_number
+    "SELECT oi.order_item_id, oi.item_id, oi.quantity, oi.Instructions, m.price, m.name, m.station, o.verification_code, o.status, o.order_number
     FROM orderitems_tbl oi
     JOIN menuitems_tbl m ON oi.item_id = m.item_id
     JOIN orders_tbl o ON oi.order_id = o.order_id
@@ -61,6 +60,10 @@ foreach ($orders as $order) {
     $order['target_display'] = $order['target_minutes'] . "m";
     $order['overrun_display'] = "Exceeded by " . $overrunMinutes . "m";
     $order['quantity_total'] = array_sum(array_column($order['items'], 'quantity'));
+    $order['order_total'] = array_sum(array_map(
+        fn($item) => (float) $item['price'] * (int) $item['quantity'],
+        $order['items']
+    ));
     $order['verification_code'] = $order['items'][0]['verification_code'] ?? null;
     $order['status'] = $order['items'][0]['status'] ?? null;
     $order['order_number'] = $order['items'][0]['order_number'] ?? null;
@@ -72,6 +75,17 @@ foreach ($orders as $order) {
 }
 
 $activeOrdersCount = count($liveOrders);
+
+$allStations = [];
+foreach ($liveOrders as $order) {
+    foreach ($order['items'] as $item) {
+        if (!empty($item['station'])) {
+            $allStations[$item['station']] = true;
+        }
+    }
+}
+$allStations = array_keys($allStations);
+sort($allStations);
 
 
 //get store data
@@ -189,10 +203,16 @@ $activeOrdersCount = count($liveOrders);
 
         <div class="queue-toolbar">
 
-            <button class="filter-btn">
-                <i class="fa-solid fa-filter"></i>
-                All Stations
-            </button>
+            <select id="stationFilter" class="filter-btn">
+
+                <option value="">All Stations</option>
+                <?php foreach ($allStations as $station): ?>
+                    <option value="<?php echo htmlspecialchars($station); ?>">
+                        <?php echo htmlspecialchars($station); ?>
+                    </option>
+                <?php endforeach; ?>
+
+            </select>
 
             <select id="sortOrders" class="filter-btn">
 
@@ -212,7 +232,8 @@ $activeOrdersCount = count($liveOrders);
                 <div class="order-card <?php echo strtolower($order['display_status']); ?>"
                     data-id="<?php echo $order['order_id']; ?>"
                     data-status="<?php echo strtolower($order['display_status']); ?>"
-                    data-quantity="<?php echo $order['quantity_total']; ?>">
+                    data-quantity="<?php echo $order['quantity_total']; ?>"
+                    data-stations="<?php echo htmlspecialchars(implode(',', array_unique(array_column($order['items'], 'station')))); ?>">
 
                     <div class="order-header">
 
@@ -230,6 +251,14 @@ $activeOrdersCount = count($liveOrders);
 
                         <p class="customer-name">
                             <?php echo htmlspecialchars($order['customer_name']); ?>
+                        </p>
+
+                        <p class="customer-contact">
+                            <?php echo htmlspecialchars($order['customer_contact']); ?>
+                        </p>
+
+                        <p class="table-number">
+                            Table <?php echo htmlspecialchars($order['table_number']); ?>
                         </p>
 
                         <p class="order-time">
@@ -263,13 +292,28 @@ $activeOrdersCount = count($liveOrders);
                                     <?php echo htmlspecialchars($item['name']); ?>
                                 </span>
 
+                                <span class="item-price">
+                                    ₱<?php echo number_format($item['price'] * $item['quantity'], 2); ?>
+                                </span>
+
                                 <span class="item-station">
                                     <?php echo htmlspecialchars($item['station'] ?? ''); ?>
                                 </span>
 
+                                <?php if (!empty($item['Instructions'])): ?>
+                                    <span class="item-notes">
+                                        Note: <?php echo htmlspecialchars($item['Instructions']); ?>
+                                    </span>
+                                <?php endif; ?>
+
                             </div>
 
                         <?php endforeach; ?>
+
+                        <div class="order-total">
+                            <span>Total</span>
+                            <span class="order-total-amount">₱<?php echo number_format($order['order_total'], 2); ?></span>
+                        </div>
 
                     </div>
 

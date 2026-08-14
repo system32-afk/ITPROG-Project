@@ -14,7 +14,7 @@ if (!isset($_SESSION["vendor_id"])) {
 $vendorID = $_SESSION["vendor_id"];
 
 $stmt = $conn->prepare(
-    "SELECT order_id, customer_name, customer_contact, payment_method, status, target_minutes, created_at
+    "SELECT order_id, customer_name, customer_contact, table_number, payment_method, status, target_minutes, created_at
     FROM orders_tbl
     WHERE vendor_id = ? AND status NOT IN ('done','canceled')
     ORDER BY created_at ASC"
@@ -24,7 +24,7 @@ $stmt->execute();
 $orders = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 $itemStmt = $conn->prepare(
-    "SELECT oi.order_item_id, oi.item_id, oi.quantity, m.price, m.name, m.station, o.verification_code, o.status, o.order_number
+    "SELECT oi.order_item_id, oi.item_id, oi.quantity, oi.Instructions, m.price, m.name, m.station, o.verification_code, o.status, o.order_number
     FROM orderitems_tbl oi
     JOIN menuitems_tbl m ON oi.item_id = m.item_id
     JOIN orders_tbl o ON oi.order_id = o.order_id
@@ -50,17 +50,19 @@ foreach ($orders as $order) {
     $displayStatus = $isDelayed ? "Delayed" : ucfirst($order['status']);
 
     $liveOrders[] = [
-        "order_id"          => (int) $order['order_id'],
-        "order_number"      => $items[0]['order_number'] ?? null,
-        "customer_name"     => $order['customer_name'],
-        "payment_method"    => $order['payment_method'],
-        "status"            => $items[0]['status'] ?? null,
-        "display_status"    => $displayStatus,
-        "elapsed_display"   => $elapsedMinutes . "m Ago",
-        "target_display"    => $order['target_minutes'] . "m",
-        "overrun_display"   => "Exceeded by " . $overrunMinutes . "m",
-        "quantity_total"    => array_sum(array_column($items, 'quantity')),
-        "order_total"       => array_sum(array_map(
+        "order_id" => (int) $order['order_id'],
+        "order_number" => $items[0]['order_number'] ?? null,
+        "customer_name" => $order['customer_name'],
+        "customer_contact" => $order['customer_contact'],
+        "table_number" => $order['table_number'],
+        "payment_method" => $order['payment_method'],
+        "status" => $items[0]['status'] ?? null,
+        "display_status" => $displayStatus,
+        "elapsed_display" => $elapsedMinutes . "m Ago",
+        "target_display" => $order['target_minutes'] . "m",
+        "overrun_display" => "Exceeded by " . $overrunMinutes . "m",
+        "quantity_total" => array_sum(array_column($items, 'quantity')),
+        "order_total" => array_sum(array_map(
             fn($item) => (float) $item['price'] * (int) $item['quantity'],
             $items
         )),
@@ -68,9 +70,10 @@ foreach ($orders as $order) {
         "items" => array_map(function ($item) {
             return [
                 "quantity" => (int) $item['quantity'],
-                "name"     => $item['name'],
-                "station"  => $item['station'],
-                "price"    => (float) $item['price'],
+                "name" => $item['name'],
+                "station" => $item['station'],
+                "price" => (float) $item['price'],
+                "Instructions" => $item['Instructions'],
             ];
         }, $items),
     ];
@@ -82,6 +85,6 @@ foreach ($orders as $order) {
 
 echo json_encode([
     "activeOrdersCount" => count($liveOrders),
-    "delayedCount"      => $delayedCount,
-    "orders"            => $liveOrders,
+    "delayedCount" => $delayedCount,
+    "orders" => $liveOrders,
 ]);
