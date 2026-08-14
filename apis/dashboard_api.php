@@ -10,7 +10,7 @@ if (!isset($_SESSION["vendor_id"])) {
     exit();
 }
 
-// TODO: swap for $_SESSION['vendor_id'] once login/auth is wired up.
+session_start();
 $vendorId = $_SESSION['vendor_id'];
 
 $action = $_GET['action'] ?? '';

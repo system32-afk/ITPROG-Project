@@ -95,7 +95,7 @@ $vendorInfo = $vendorResult->fetch_assoc();
                 </div>
                 <h3>Today</h3>
                 <p>Sales summary for today only.</p>
-                <a href="generateReport.php?range=today" class="download-btn" download>
+                <a href="Generatereport.php?range=today" class="download-btn">
                     <i class="fa-solid fa-download"></i>
                     Download PDF
                 </a>
@@ -107,7 +107,7 @@ $vendorInfo = $vendorResult->fetch_assoc();
                 </div>
                 <h3>This Week</h3>
                 <p>Sales summary from Monday through Sunday, this week.</p>
-                <a href="generateReport.php?range=week" class="download-btn" download>
+                <a href="Generatereport.php?range=week" class="download-btn">
                     <i class="fa-solid fa-download"></i>
                     Download PDF
                 </a>
@@ -119,7 +119,7 @@ $vendorInfo = $vendorResult->fetch_assoc();
                 </div>
                 <h3>This Month</h3>
                 <p>Sales summary for the current calendar month.</p>
-                <a href="generateReport.php?range=month" class="download-btn" download>
+                <a href="Generatereport.php?range=month" class="download-btn">
                     <i class="fa-solid fa-download"></i>
                     Download PDF
                 </a>

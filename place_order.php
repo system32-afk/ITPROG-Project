@@ -62,7 +62,7 @@ try {
 
 
     $stmt = $conn->prepare("
-        INSERT INTO orderItems_tbl
+        INSERT INTO orderitems_tbl
         (order_id, item_id, instructions, quantity)
         VALUES (?, ?, ?, ?)
     ");
