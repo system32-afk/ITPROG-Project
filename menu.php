@@ -122,7 +122,7 @@ $items = $getMenuItems->get_result()->fetch_all(MYSQLI_ASSOC);
                             </h3>
 
                             <span class="price">
-                                <?php echo number_format($item['price']); ?>
+                                <?php echo number_format((float) $item['price']); ?>
                             </span>
 
                         </div>
