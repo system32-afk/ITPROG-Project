@@ -162,6 +162,7 @@ function updateInventory(mysqli $conn, int $vendorId): void
     $threshold = $_POST['threshold'] ?? null;
     $expiry = $_POST['expiry'] ?? null;
     $reason = trim($_POST['reason'] ?? '');
+    $isPerishable = isset($_POST['is_perishable']) ? (int) $_POST['is_perishable'] : 1;
 
     if (!$id || $name === '' || $stock === null || $stock === '' || !is_numeric($stock) || $reason === '') {
         http_response_code(422);
@@ -184,7 +185,7 @@ function updateInventory(mysqli $conn, int $vendorId): void
         return;
     }
 
-    if ($expiry === '') {
+    if (!$isPerishable || $expiry === '') {
         $expiry = null;
     }
     if ($threshold === null || $threshold === '') {
@@ -193,10 +194,10 @@ function updateInventory(mysqli $conn, int $vendorId): void
 
     $stmt = $conn->prepare(
         "UPDATE inventory
-         SET item_name = ?, unit = ?, qty_on_hand = ?, reorder_threshold = ?, expiry_date = ?
+         SET item_name = ?, unit = ?, qty_on_hand = ?, reorder_threshold = ?, expiry_date = ?, is_perishable = ?
          WHERE inventory_id = ? AND vendor_id = ?"
     );
-    $stmt->bind_param("ssddsii", $name, $unit, $stock, $threshold, $expiry, $id, $vendorId);
+    $stmt->bind_param("ssddsiii", $name, $unit, $stock, $threshold, $expiry, $isPerishable, $id, $vendorId);
     $stmt->execute();
 
     $description = sprintf(
@@ -221,31 +222,6 @@ function updateInventory(mysqli $conn, int $vendorId): void
     ]);
 }
 
-/* ============================
-   DELETE
-   (No delete button wired up in the UI yet — endpoint is ready
-   for whenever you add one to the Actions column.)
-============================ */
-
-function deleteInventory(mysqli $conn, int $vendorId): void
-{
-    $id = (int) ($_POST['inventory_id'] ?? 0);
-
-    if (!$id) {
-        http_response_code(422);
-        echo json_encode(["error" => "Missing inventory_id."]);
-        return;
-    }
-
-    // Log before deleting since history has no FK back to inventory.
-    logHistory($conn, $id, $vendorId, "deleted", "Ingredient removed from inventory");
-
-    $stmt = $conn->prepare("DELETE FROM inventory WHERE inventory_id = ? AND vendor_id = ?");
-    $stmt->bind_param("ii", $id, $vendorId);
-    $stmt->execute();
-
-    echo json_encode(["success" => true, "deleted" => $stmt->affected_rows > 0]);
-}
 
 /* ============================
    HISTORY
