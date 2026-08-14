@@ -76,9 +76,11 @@ $inventoryAlerts = getInventoryAlerts($conn, $vendorID);
             <a href="reports.php">
                 <i class="fa-solid fa-chart-pie"></i>
                 Reports</a>
-            <a href="#">
-                <i class="fa-solid fa-question-circle"></i>
-                Help</a>
+
+            <a href="logout.php" class="logout-link">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                Logout
+            </a>
         </div>
 
     </div>
@@ -130,7 +132,7 @@ $inventoryAlerts = getInventoryAlerts($conn, $vendorID);
 
                         <thead>
                             <tr>
-                                <th>Order ID</th>
+                                <th>Order Number</th>
                                 <th>Customer</th>
                                 <th>Status</th>
                             </tr>
@@ -146,7 +148,7 @@ $inventoryAlerts = getInventoryAlerts($conn, $vendorID);
 
                             <?php foreach ($recentOrders as $order): ?>
 
-                                <tr onclick="window.location='vieworder.php?id=<?php echo $order['id']; ?>'">
+                                <tr>
                                     <td><?php echo htmlspecialchars($order['id']); ?></td>
                                     <td><?php echo htmlspecialchars($order['customer']); ?></td>
 

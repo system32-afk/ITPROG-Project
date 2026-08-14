@@ -1,7 +1,7 @@
 <?php
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 require_once "database.php";
-
+require_once "apis/cart_functions.php";
 $data = json_decode(file_get_contents("php://input"), true);
 
 $vendorID = $data["vendorID"];
@@ -9,7 +9,7 @@ $orderNumber = $data["orderNumber"];
 $orderType = $data["orderType"];
 $tableNumber = $data["tableNumber"];
 $paymentMethod = $data["paymentMethod"];
-$total = $data["total"];
+$total = calculateCartTotal($conn, $data["items"]);
 $customerName = $data["customer"]["name"];
 $customerContact = $data["customer"]["contact"];
 $items = $data["items"];
@@ -20,6 +20,22 @@ if ($paymentMethod === "Cash") {
 } else {
     $verificationCode = null;
     $status = "Pending";
+}
+
+//check first if the item is enabled
+
+foreach ($items as $item) {
+    $checkstatus = $conn->prepare("SELECT item_id FROM menuitems_tbl WHERE item_id = ? AND vendor_id = ? AND is_enabled = 1");
+    $checkstatus->bind_param("ii", $item["id"], $vendorID);
+    $checkstatus->execute();
+
+    if ($checkstatus->get_result()->fetch_assoc() === null) {
+        echo json_encode([
+            "success" => false,
+            "message" => "An item in your cart does not exist or is not active."
+        ]);
+        exit();
+    }
 }
 
 $conn->begin_transaction();
@@ -85,6 +101,7 @@ try {
         "success" => true,
         "orderId" => $orderId,
         "paymentMethod" => $paymentMethod,
+        "total" => $total,
         "message" => "Order created successfully."
     ]);
 
