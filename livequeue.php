@@ -14,6 +14,7 @@ $getVendorInfo = $conn->prepare("SELECT store_name FROM vendor_tbl WHERE vendor_
 $getVendorInfo->bind_param("i", $vendorID);
 $getVendorInfo->execute();
 
+
 $vendorResult = $getVendorInfo->get_result();
 
 $vendorInfo = $vendorResult->fetch_assoc();
@@ -26,6 +27,9 @@ $stmt = $conn->prepare(
     WHERE vendor_id = ? AND status NOT IN ('done','canceled')
     ORDER BY created_at ASC"
 );
+
+
+
 $stmt->bind_param("i", $vendorID);
 $stmt->execute();
 $orders = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);

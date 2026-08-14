@@ -6,6 +6,7 @@ $data = json_decode(file_get_contents("php://input"), true);
 session_start();
 
 
+
 $orderId = $data['orderId'] ?? null;
 $verificationCode = $data['verificationCode'] ?? null;
 

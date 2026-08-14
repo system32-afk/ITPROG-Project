@@ -13,6 +13,10 @@ require_once "database.php";
 if (!isset($_GET['vendor'])) {
     header("Location: ./access_denied.php");
 }
+
+if (!isset($_GET['vendor'])) {
+    header("Location: ./access_denied.php");
+}
 $vendorID = $_GET['vendor'];
 $getVendorInfo = $conn->prepare("SELECT store_name FROM vendor_tbl WHERE vendor_id = ?");
 $getVendorInfo->bind_param("i", $vendorID);
@@ -410,6 +414,7 @@ $items = $getMenuItems->get_result()->fetch_all(MYSQLI_ASSOC);
 
                 <h2>Cash Verification</h2>
 
+
                 <p>Please enter the code provided by the cashier to confirm your order.</p>
 
                 <div class="cash-details">
@@ -419,6 +424,7 @@ $items = $getMenuItems->get_result()->fetch_all(MYSQLI_ASSOC);
                     </div>
                     <div class="cash-row">
                         <span>Total Amount</span>
+                        <strong id="verificationTotal">₱0.00</strong>
                         <strong id="verificationTotal">₱0.00</strong>
                     </div>
                 </div>
@@ -450,6 +456,7 @@ $items = $getMenuItems->get_result()->fetch_all(MYSQLI_ASSOC);
                     Order Placed!
                 </h2>
                 <h1 class="orderTotal"></h1>
+                <h1 class="orderTotal"></h1>
 
                 <p>
                     Thank you for ordering with Pabili.
@@ -479,6 +486,22 @@ $items = $getMenuItems->get_result()->fetch_all(MYSQLI_ASSOC);
 
                         <strong>
                             15 - 20 mins
+                        </strong>
+
+
+
+
+
+                    </div>
+
+                    <div class="success-row">
+
+                        <span>
+                            Total paid:
+                        </span>
+
+                        <strong id="successOrderTotal">
+                            ₱0.00
                         </strong>
 
 
