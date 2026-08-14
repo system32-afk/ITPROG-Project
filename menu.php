@@ -425,7 +425,6 @@ $items = $getMenuItems->get_result()->fetch_all(MYSQLI_ASSOC);
                     <div class="cash-row">
                         <span>Total Amount</span>
                         <strong id="verificationTotal">₱0.00</strong>
-                        <strong id="verificationTotal">₱0.00</strong>
                     </div>
                 </div>
 
