@@ -3,9 +3,15 @@ require_once __DIR__ . "/../database.php";
 require_once __DIR__ . "/../dashboard_data.php";
 
 header('Content-Type: application/json');
+session_start();
+//check if user has loggedin
+if (!isset($_SESSION["vendor_id"])) {
+    header("Location: ./access_denied.php");
+    exit();
+}
 
 // TODO: swap for $_SESSION['vendor_id'] once login/auth is wired up.
-$vendorId = 1;
+$vendorId = $_SESSION['vendor_id'];
 
 $action = $_GET['action'] ?? '';
 

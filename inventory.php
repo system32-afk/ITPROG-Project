@@ -3,9 +3,11 @@ require_once "database.php";
 
 session_start();
 //check if user has loggedin
-if (!isset($_SESSION)) {
+if (!isset($_SESSION["vendor_id"])) {
     header("Location: ./login.php");
+    exit();
 }
+
 
 $vendorID = $_SESSION["vendor_id"];
 

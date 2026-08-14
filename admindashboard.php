@@ -4,9 +4,11 @@ require_once "dashboard_data.php";
 
 session_start();
 //check if user has loggedin
-if (!isset($_SESSION)) {
+if (!isset($_SESSION["vendor_id"])) {
     header("Location: ./login.php");
+    exit();
 }
+
 
 $vendorID = $_SESSION["vendor_id"];
 

@@ -12,8 +12,14 @@ session_start();
 const VALID_CATEGORIES = ['Main Course', 'Appetizers', 'Salads', 'Desserts'];
 const VALID_STATIONS = ['GRILL', 'FRYER', 'COLD', 'PREP'];
 
-// swap for $_SESSION['vendor_id'] once login/auth is wired up.
-// Hardcoded to match the pattern already used in admindashboard.php / inventory_api.php.
+session_start();
+//check if user has loggedin
+if (!isset($_SESSION["vendor_id"])) {
+    header("Location: ./access_denied.php");
+    exit();
+}
+
+
 $vendorId = $_SESSION['vendor_id'];
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';

@@ -78,7 +78,29 @@ $items = $getMenuItems->get_result()->fetch_all(MYSQLI_ASSOC);
             <input type="text" id="searchInput" placeholder="Search menu...">
 
         </div>
+        <div class="categories">
 
+            <button class="category active">
+                All
+            </button>
+
+            <button class="category">
+                Main Course
+            </button>
+
+            <button class="category">
+                Appetizers
+            </button>
+
+            <button class="category">
+                Salads
+            </button>
+
+            <button class="category">
+                Desserts
+            </button>
+
+        </div>
         <!--Load Menu Items-->
         <div class="menu-grid">
             <?php foreach ($items as $item): ?>
