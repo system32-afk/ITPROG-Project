@@ -3,9 +3,11 @@ require_once "database.php";
 
 session_start();
 //check if user has loggedin
-if (!isset($_SESSION)) {
+if (!isset($_SESSION["vendor_id"])) {
     header("Location: ./login.php");
+    exit();
 }
+
 
 $vendorID = $_SESSION["vendor_id"];
 
@@ -15,7 +17,7 @@ $stmt = $conn->prepare(
     WHERE vendor_id = ?
     ORDER BY item_name ASC"
 );
-$stmt->bind_param("i", $vendorId);
+$stmt->bind_param("i", $vendorID);
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -49,7 +51,7 @@ while ($row = $result->fetch_assoc()) {
     $inventoryItems[] = $row;
 }
 
-$vendorID = $_SESSION["vendor_id"];
+
 $getVendorInfo = $conn->prepare("SELECT store_name FROM vendor_tbl WHERE vendor_id = ?");
 $getVendorInfo->bind_param("i", $vendorID);
 $getVendorInfo->execute();
@@ -109,9 +111,11 @@ $vendorInfo = $vendorResult->fetch_assoc();
             <a href="reports.php">
                 <i class="fa-solid fa-chart-pie"></i>
                 Reports</a>
-            <a href="#">
-                <i class="fa-solid fa-question-circle"></i>
-                Help</a>
+
+            <a href="logout.php" class="logout-link">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                Logout
+            </a>
         </div>
 
     </div>

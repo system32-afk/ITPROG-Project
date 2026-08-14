@@ -5,7 +5,7 @@ require_once "database.php";
 require "vendor/setasign/fpdf/fpdf.php";
 session_start();
 //check if user has loggedin
-if (!isset($_SESSION) && !isset($_SESSION["vendor_id"])) {
+if (!isset($_SESSION["vendor_id"])) {
     header("Location: ./access_denied.php");
 }
 

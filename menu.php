@@ -9,6 +9,10 @@ require_once "database.php";
 /* Dummy Menu Items */
 
 //TODO MAKE THIS I
+
+if (!isset($_GET['vendor'])) {
+    header("Location: ./access_denied.php");
+}
 $vendorID = $_GET['vendor'];
 $getVendorInfo = $conn->prepare("SELECT store_name FROM vendor_tbl WHERE vendor_id = ?");
 $getVendorInfo->bind_param("i", $vendorID);
@@ -19,7 +23,7 @@ $vendorInfo = $vendorResult->fetch_assoc();
 
 //GET menu items
 
-$getMenuItems = $conn->prepare("SELECT * FROM menuitems_tbl WHERE vendor_id = ?");
+$getMenuItems = $conn->prepare("SELECT * FROM menuitems_tbl WHERE vendor_id = ? AND is_enabled = 1");
 $getMenuItems->bind_param("i", $vendorID);
 $getMenuItems->execute();
 
@@ -78,7 +82,29 @@ $items = $getMenuItems->get_result()->fetch_all(MYSQLI_ASSOC);
             <input type="text" id="searchInput" placeholder="Search menu...">
 
         </div>
+        <div class="categories">
 
+            <button class="category active">
+                All
+            </button>
+
+            <button class="category">
+                Main Course
+            </button>
+
+            <button class="category">
+                Appetizers
+            </button>
+
+            <button class="category">
+                Salads
+            </button>
+
+            <button class="category">
+                Desserts
+            </button>
+
+        </div>
         <!--Load Menu Items-->
         <div class="menu-grid">
             <?php foreach ($items as $item): ?>
@@ -96,7 +122,7 @@ $items = $getMenuItems->get_result()->fetch_all(MYSQLI_ASSOC);
                             </h3>
 
                             <span class="price">
-                                ₱<?php echo number_format($item['price']); ?>
+                                <?php echo number_format($item['price']); ?>
                             </span>
 
                         </div>
@@ -383,6 +409,7 @@ $items = $getMenuItems->get_result()->fetch_all(MYSQLI_ASSOC);
                 </div>
 
                 <h2>Cash Verification</h2>
+
                 <p>Please enter the code provided by the cashier to confirm your order.</p>
 
                 <div class="cash-details">
@@ -392,7 +419,7 @@ $items = $getMenuItems->get_result()->fetch_all(MYSQLI_ASSOC);
                     </div>
                     <div class="cash-row">
                         <span>Total Amount</span>
-                        <strong id="cashTotalAmount">₱0.00</strong>
+                        <strong id="verificationTotal">₱0.00</strong>
                     </div>
                 </div>
 
@@ -422,6 +449,7 @@ $items = $getMenuItems->get_result()->fetch_all(MYSQLI_ASSOC);
                 <h2>
                     Order Placed!
                 </h2>
+                <h1 class="orderTotal"></h1>
 
                 <p>
                     Thank you for ordering with Pabili.
@@ -451,6 +479,22 @@ $items = $getMenuItems->get_result()->fetch_all(MYSQLI_ASSOC);
 
                         <strong>
                             15 - 20 mins
+                        </strong>
+
+
+
+
+
+                    </div>
+
+                    <div class="success-row">
+
+                        <span>
+                            Total paid:
+                        </span>
+
+                        <strong id="successOrderTotal">
+                            ₱0.00
                         </strong>
 
                     </div>

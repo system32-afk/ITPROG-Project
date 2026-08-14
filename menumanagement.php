@@ -3,8 +3,9 @@ require_once "database.php";
 
 session_start();
 //check if user has loggedin
-if (!isset($_SESSION)) {
+if (!isset($_SESSION["vendor_id"])) {
     header("Location: ./login.php");
+    exit();
 }
 
 $vendorID = $_SESSION["vendor_id"];
@@ -26,7 +27,7 @@ $stmt = $conn->prepare(
      ORDER BY item_id DESC
      LIMIT ? OFFSET ?"
 );
-$stmt->bind_param("iii", $vendorId, $perPage, $offset);
+$stmt->bind_param("iii", $vendorID, $perPage, $offset);
 $stmt->execute();
 $menuItems = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
@@ -95,9 +96,11 @@ $vendorInfo = $vendorResult->fetch_assoc();
             <a href="reports.php">
                 <i class="fa-solid fa-chart-pie"></i>
                 Reports</a>
-            <a href="#">
-                <i class="fa-solid fa-question-circle"></i>
-                Help</a>
+
+            <a href="logout.php" class="logout-link">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                Logout
+            </a>
         </div>
 
     </div>
@@ -117,25 +120,7 @@ $vendorInfo = $vendorResult->fetch_assoc();
                 <input type="text" id="searchInput" placeholder="Search menu items...">
             </div>
 
-            <div class="top-actions">
 
-                <button class="icon-btn">
-                    <i class="fa-regular fa-bell"></i>
-                </button>
-
-                <button class="icon-btn">
-                    <i class="fa-solid fa-gear"></i>
-                </button>
-
-                <button class="new-order-btn" id="openAddModal">
-                    + New Order
-                </button>
-
-                <div class="profile-circle" onclick="window.location='profile.php'">
-                    A
-                </div>
-
-            </div>
 
         </div>
 
@@ -327,9 +312,6 @@ $vendorInfo = $vendorResult->fetch_assoc();
                                 <div class="action-cell">
                                     <button class="action-btn edit" title="Edit item">
                                         <i class="fa-solid fa-pen"></i>
-                                    </button>
-                                    <button class="action-btn delete" title="Delete item">
-                                        <i class="fa-solid fa-trash"></i>
                                     </button>
                                 </div>
                             </td>

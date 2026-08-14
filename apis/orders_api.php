@@ -3,9 +3,15 @@ require_once __DIR__ . "/../database.php";
 
 header('Content-Type: application/json');
 
-// swap for $_SESSION['vendor_id'] once login/auth is wired up.
-// Hardcoded to match the pattern already used in menu_api.php / inventory_api.php.
-$vendorId = 1;
+session_start();
+//check if user has loggedin
+if (!isset($_SESSION["vendor_id"])) {
+    header("Location: ./access_denied.php");
+    exit();
+}
+
+
+$vendorId = $_SESSION['vendor_id'];
 
 // Statuses that can be *set* via this endpoint. "pending" is a starting
 // state assigned at order creation (out of scope here), not something the
@@ -32,7 +38,7 @@ switch ($action) {
 
 function updateOrderStatus(mysqli $conn, int $vendorId): void
 {
-    $orderId = (int)($_POST['order_id'] ?? 0);
+    $orderId = (int) ($_POST['order_id'] ?? 0);
     $status = $_POST['status'] ?? '';
 
     if (!$orderId || !in_array($status, ALLOWED_STATUSES, true)) {

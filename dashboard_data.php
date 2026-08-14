@@ -14,7 +14,7 @@ function getDashboardStats(mysqli $conn, int $vendorId): array
     $ordersTodayStmt->execute();
     $ordersToday = (int) $ordersTodayStmt->get_result()->fetch_assoc()['total'];
 
-    // Counts all of today's orders except cancelled ones -- payment is
+    // Counts all of today's orders except cancelled ones, payment is
     // typically taken at order time (GCash) or on pickup (Cash) regardless
     // of whether the kitchen has finished preparing it yet.
     $revenueTodayStmt = $conn->prepare(
@@ -53,7 +53,7 @@ function getDashboardStats(mysqli $conn, int $vendorId): array
 function getRecentOrders(mysqli $conn, int $vendorId, int $limit = 5): array
 {
     $stmt = $conn->prepare(
-        "SELECT order_id, customer_name, status, target_minutes, created_at
+        "SELECT order_number, customer_name, status, target_minutes, created_at
          FROM orders_tbl
          WHERE vendor_id = ?
          ORDER BY created_at DESC
@@ -80,7 +80,7 @@ function getRecentOrders(mysqli $conn, int $vendorId, int $limit = 5): array
         }
 
         $recentOrders[] = [
-            "id" => str_pad($order['order_id'], 3, "0", STR_PAD_LEFT),
+            "id" => str_pad($order['order_number'], 3, "0", STR_PAD_LEFT),
             "customer" => $order['customer_name'],
             "status" => $displayStatus,
             // Hyphenated, lowercase version for use as a CSS class -- plain

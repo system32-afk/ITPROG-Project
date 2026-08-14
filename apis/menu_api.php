@@ -12,8 +12,13 @@ session_start();
 const VALID_CATEGORIES = ['Main Course', 'Appetizers', 'Salads', 'Desserts'];
 const VALID_STATIONS = ['GRILL', 'FRYER', 'COLD', 'PREP'];
 
-// swap for $_SESSION['vendor_id'] once login/auth is wired up.
-// Hardcoded to match the pattern already used in admindashboard.php / inventory_api.php.
+//check if user has loggedin
+if (!isset($_SESSION["vendor_id"])) {
+    header("Location: ./access_denied.php");
+    exit();
+}
+
+
 $vendorId = $_SESSION['vendor_id'];
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
@@ -174,25 +179,7 @@ function updateMenuItem(mysqli $conn, int $vendorId): void
     echo json_encode(["success" => true]);
 }
 
-/* ============================
-   DELETE
-============================ */
 
-function deleteMenuItem(mysqli $conn, int $vendorId): void
-{
-    $id = (int) ($_POST['item_id'] ?? 0);
-    if (!$id) {
-        http_response_code(422);
-        echo json_encode(["error" => "Missing item_id."]);
-        return;
-    }
-
-    $stmt = $conn->prepare("DELETE FROM menuitems_tbl WHERE item_id = ? AND vendor_id = ?");
-    $stmt->bind_param("ii", $id, $vendorId);
-    $stmt->execute();
-
-    echo json_encode(["success" => true, "deleted" => $stmt->affected_rows > 0]);
-}
 
 /* ============================
    TOGGLE (enable/disable)

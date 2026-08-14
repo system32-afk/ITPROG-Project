@@ -223,29 +223,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    /* ============================
-       DELETE
-    ============================ */
-
-    tableBody.addEventListener('click', async (e) => {
-        const deleteButton = e.target.closest('.action-btn.delete');
-        if (!deleteButton) return;
-
-        const row = deleteButton.closest('tr');
-        const itemId = row.dataset.id;
-
-        if (!confirm(`Delete "${row.dataset.name}"? This can't be undone.`)) {
-            return;
-        }
-
-        try {
-            await callApi('delete', { item_id: itemId }, 'POST');
-            // Reload so pagination/total counts stay accurate.
-            window.location.reload();
-        } catch (err) {
-            alert(err.message);
-        }
-    });
 
     /* ============================
        SEARCH
