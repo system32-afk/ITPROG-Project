@@ -4,7 +4,15 @@ require_once __DIR__ . "/../database.php";
 header('Content-Type: application/json');
 
 session_start();
+//check if user has loggedin
+if (!isset($_SESSION["vendor_id"])) {
+    header("Location: ./access_denied.php");
+    exit();
+}
+
+
 $vendorId = $_SESSION['vendor_id'];
+
 // Statuses that can be *set* via this endpoint. "pending" is a starting
 // state assigned at order creation (out of scope here), not something the
 // kitchen admin sets manually, so it's deliberately left out of this list.
