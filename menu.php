@@ -509,17 +509,6 @@ $items = $getMenuItems->get_result()->fetch_all(MYSQLI_ASSOC);
 
                     </div>
 
-                    <div class="success-row">
-
-                        <span>
-                            Total paid:
-                        </span>
-
-                        <strong id="successOrderTotal">
-                            ₱0.00
-                        </strong>
-
-                    </div>
 
                 </div>
 
