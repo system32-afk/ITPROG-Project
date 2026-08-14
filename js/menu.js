@@ -606,6 +606,7 @@ elements.verificationBtn.addEventListener("click", ()=>{
 elements.cancelCashBtn = document.getElementById("cancelCashBtn");
 elements.cancelCashBtn.addEventListener("click", () => {
     closeModal(document.getElementById("cashVerificationModal"));
+    closeModal(elements.checkoutModal);
 });
 
 elements.continueOrderingBtn.addEventListener("click", () => {
