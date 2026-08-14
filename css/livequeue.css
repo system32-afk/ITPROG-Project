@@ -195,20 +195,6 @@ th{
     opacity:.9;
 }
 
-.profile-circle{
-    width:42px;
-    height:42px;
-    border-radius:50%;
-    background:var(--secondary);
-    color:white;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    font-weight:700;
-}
-
 .page-title{
     font-size:32px;
     margin-bottom:20px;
@@ -296,7 +282,30 @@ th{
     }
 
 }
+.customer-contact {
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin-top: -4px;
+    margin-bottom: 6px;
+}
 
+.table-number {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-family:'JetBrains Mono',monospace;
+    margin-bottom: 6px;
+}
+
+.item-notes {
+    flex-basis: 100%;
+    font-size: 0.8rem;
+    font-style: italic;
+    color: #b45309;
+    margin-top: 2px;
+    margin-left: 2.2rem; /* aligns roughly under item-name */
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
 
 .profile-circle{
     cursor:pointer;
@@ -371,6 +380,7 @@ th{
 
 .order-item{
     display:flex;
+    flex-wrap:wrap;
     align-items:center;
     gap:10px;
     margin-bottom:10px;
@@ -403,12 +413,37 @@ th{
     color:white;
 }
 
+.item-price{
+    color:var(--muted);
+    font-size:13px;
+    font-family:'JetBrains Mono',monospace;
+    white-space:nowrap;
+}
+
 .item-station{
     margin-left:auto;
     color:#64748B;
     font-size:11px;
     font-family:'JetBrains Mono',monospace;
     text-transform:uppercase;
+}
+
+.order-total{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:12px;
+    padding-top:12px;
+    border-top:1px solid var(--border);
+    font-weight:600;
+    color:var(--text);
+    font-size:14px;
+}
+
+.order-total-amount{
+    font-family:'JetBrains Mono',monospace;
+    color:var(--neutral);
+    font-size:16px;
 }
 
 .priority-btn{
@@ -626,4 +661,3 @@ th{
     margin-bottom:25px;
 
 }
-/* live queue css end */

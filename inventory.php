@@ -11,20 +11,51 @@ if (!isset($_SESSION["vendor_id"])) {
 
 $vendorID = $_SESSION["vendor_id"];
 
+$perPage = 5;
+$currentPage = max(1, (int) ($_GET['page'] ?? 1));
+
+$countStmt = $conn->prepare("SELECT COUNT(*) AS total FROM inventory WHERE vendor_id = ?");
+$countStmt->bind_param("i", $vendorID);
+$countStmt->execute();
+$totalItems = (int) $countStmt->get_result()->fetch_assoc()['total'];
+$totalPages = max(1, (int) ceil($totalItems / $perPage));
+$currentPage = min($currentPage, $totalPages);
+$offset = ($currentPage - 1) * $perPage;
+
+// Stats (Low Stock / Expiring Soon) are computed across ALL of the
+// vendor's inventory, not just the current page, so the cards stay accurate.
+$statsStmt = $conn->prepare(
+    "SELECT qty_on_hand, reorder_threshold, expiry_date FROM inventory WHERE vendor_id = ?"
+);
+$statsStmt->bind_param("i", $vendorID);
+$statsStmt->execute();
+$statsResult = $statsStmt->get_result();
+
+$lowStock = 0;
+$expiringSoon = 0;
+$thirtyDaysOut = strtotime("+30 days");
+
+while ($row = $statsResult->fetch_assoc()) {
+    if ($row["qty_on_hand"] <= $row["reorder_threshold"]) {
+        $lowStock++;
+    }
+    if ($row["expiry_date"] && strtotime($row["expiry_date"]) <= $thirtyDaysOut) {
+        $expiringSoon++;
+    }
+}
+
 $stmt = $conn->prepare(
-    "SELECT inventory_id, item_name, unit, qty_on_hand, reorder_threshold, expiry_date, is_perishable
+    "SELECT inventory_id, item_name, unit, qty_on_hand, reorder_threshold, expiry_date, is_perishable, last_updated
     FROM inventory
     WHERE vendor_id = ?
-    ORDER BY item_name ASC"
+    ORDER BY item_name ASC
+    LIMIT ? OFFSET ?"
 );
-$stmt->bind_param("i", $vendorID);
+$stmt->bind_param("iii", $vendorID, $perPage, $offset);
 $stmt->execute();
 $result = $stmt->get_result();
 
 $inventoryItems = [];
-$lowStock = 0;
-$expiringSoon = 0;
-$thirtyDaysOut = strtotime("+30 days");
 
 while ($row = $result->fetch_assoc()) {
     if ($row["qty_on_hand"] <= 0) {
@@ -40,13 +71,6 @@ while ($row = $result->fetch_assoc()) {
 
     $row["status"] = $status;
     $row["status_class"] = $class;
-
-    if ($class !== "good") {
-        $lowStock++;
-    }
-    if ($row["expiry_date"] && strtotime($row["expiry_date"]) <= $thirtyDaysOut) {
-        $expiringSoon++;
-    }
 
     $inventoryItems[] = $row;
 }
@@ -130,6 +154,21 @@ $vendorInfo = $vendorResult->fetch_assoc();
             </div>
 
             <div class="top-actions">
+                <div class="sort-container">
+                    <label for="sortSelect" class="sort-label">Sort by</label>
+                    <select id="sortSelect">
+                        <option value="">Default</option>
+                        <option value="name-asc">Name (A–Z)</option>
+                        <option value="name-desc">Name (Z–A)</option>
+                        <option value="qty-asc">Stock (Low–High)</option>
+                        <option value="qty-desc">Stock (High–Low)</option>
+                        <option value="status-asc">Status (Critical First)</option>
+                        <option value="expiry-asc">Expiry Date (Soonest)</option>
+                        <option value="expiry-desc">Expiry Date (Latest)</option>
+                        <option value="updated-desc">Latest Updated</option>
+                        <option value="updated-asc">Oldest Updated</option>
+                    </select>
+                </div>
                 <button class="new-order-btn" id="openAddModal">
                     <i class="fa-solid fa-circle-plus"></i>
                     Add New Stock
@@ -178,7 +217,12 @@ $vendorInfo = $vendorResult->fetch_assoc();
                     <?php foreach ($inventoryItems as $item): ?>
 
                         <tr data-id="<?= (int) $item['inventory_id'] ?>"
-                            data-perishable="<?= (int) $item['is_perishable'] ?>">
+                            data-perishable="<?= (int) $item['is_perishable'] ?>"
+                            data-name="<?= htmlspecialchars($item['item_name']) ?>"
+                            data-qty="<?= htmlspecialchars($item['qty_on_hand']) ?>"
+                            data-status="<?= htmlspecialchars($item['status_class']) ?>"
+                            data-expiry="<?= $item['expiry_date'] ? htmlspecialchars($item['expiry_date']) : '' ?>"
+                            data-updated="<?= htmlspecialchars($item['last_updated']) ?>">
 
                             <td><?= htmlspecialchars($item["item_name"]) ?></td>
 
@@ -208,6 +252,27 @@ $vendorInfo = $vendorResult->fetch_assoc();
                 </tbody>
 
             </table>
+
+            <div class="table-footer">
+                <span class="showing-text">
+                    Showing <?= $totalItems === 0 ? 0 : $offset + 1 ?>–<?= min($offset + $perPage, $totalItems) ?> of
+                    <?= $totalItems ?> Inventory Items
+                </span>
+
+                <div class="pagination">
+                    <?php for ($p = 1; $p <= min(3, $totalPages); $p++): ?>
+                        <a href="?page=<?= $p ?>" class="page-btn <?= $p === $currentPage ? 'active' : '' ?>"><?= $p ?></a>
+                    <?php endfor; ?>
+
+                    <?php if ($totalPages > 4): ?>
+                        <span class="page-ellipsis">...</span>
+                        <a href="?page=<?= $totalPages ?>"
+                            class="page-btn <?= $totalPages === $currentPage ? 'active' : '' ?>"><?= $totalPages ?></a>
+                    <?php elseif ($totalPages === 4): ?>
+                        <a href="?page=4" class="page-btn <?= $currentPage === 4 ? 'active' : '' ?>">4</a>
+                    <?php endif; ?>
+                </div>
+            </div>
 
         </div>
 
