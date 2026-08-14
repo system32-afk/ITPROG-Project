@@ -359,7 +359,7 @@ $items = $getMenuItems->get_result()->fetch_all(MYSQLI_ASSOC);
                         </option>
 
                         <option>
-                            Take Out
+                            Takeout
                         </option>
 
                     </select>
